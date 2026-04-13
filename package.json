@@ -1,24 +1,33 @@
 {
-  "name": "@rvct/asyncapi-codegen",
-  "version": "0.2.0",
+  "name": "@rvct/asyncapi",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "lint": "eslint .",
+    "build": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json -f",
+    "lint": "eslint . && tsc --noEmit -p tsconfig.json",
     "format": "eslint --fix . && prettier --write .",
-    "format.check": "eslint . && prettier --check ."
+    "format.check": "eslint . && prettier --check .",
+    "test": "npm run test:unit && npm run test:smoke",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "test:smoke": "npm run build && vitest run --config vitest.smoke.config.ts"
   },
-  "description": "AsyncAPI to TypeScript and Zod code generator",
-  "main": "./src/index.mjs",
-  "module": "./src/index.mjs",
+  "description": "Config-driven AsyncAPI to JSON Schema, TypeScript, and Zod generator",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.mjs",
-    "./cli": "./src/cli.mjs"
+    ".": "./dist/index.js",
+    "./cli": "./dist/cli.js",
+    "./config": "./dist/config.js",
+    "./plugins/asyncapi": "./dist/plugins/asyncapi.js",
+    "./plugins/typescript": "./dist/plugins/typescript.js",
+    "./plugins/zod": "./dist/plugins/zod.js"
   },
   "bin": {
-    "asyncapi-codegen": "./src/cli.mjs"
+    "asyncapi-codegen": "./dist/cli.js"
   },
   "files": [
-    "src"
+    "dist"
   ],
   "keywords": [
     "asyncapi",
@@ -34,6 +43,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "eslint": "^9.39.1"
+    "@types/node": "^25.6.0",
+    "eslint": "^9.39.1",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.1",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
   }
 }
