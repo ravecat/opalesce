@@ -1,0 +1,42 @@
+asyncapi: 3.0.0
+info:
+  title: Reply Payload Regression
+  version: 1.0.0
+channels:
+  queue:
+    address: queue
+    messages:
+      create:
+        $ref: "#/components/messages/create"
+      createReply:
+        $ref: "#/components/messages/createReply"
+operations:
+  create:
+    action: send
+    channel:
+      $ref: "#/channels/queue"
+    messages:
+      - $ref: "#/channels/queue/messages/create"
+    reply:
+      channel:
+        $ref: "#/channels/queue"
+      messages:
+        - $ref: "#/channels/queue/messages/createReply"
+components:
+  messages:
+    create:
+      payload:
+        type: object
+        properties:
+          id:
+            type: string
+        required:
+          - id
+    createReply:
+      payload:
+        type: object
+        properties:
+          accepted:
+            type: boolean
+        required:
+          - accepted

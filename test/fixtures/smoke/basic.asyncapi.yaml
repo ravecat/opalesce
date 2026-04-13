@@ -1,0 +1,50 @@
+asyncapi: 3.0.0
+info:
+  title: Basic Smoke Fixture
+  version: 1.0.0
+channels:
+  room:
+    address: "room:{room_id}"
+    parameters:
+      room_id:
+        description: Room identifier
+    messages:
+      joinRoom:
+        $ref: "#/components/messages/joinRoom"
+      joinRoomReply:
+        $ref: "#/components/messages/joinRoomReply"
+operations:
+  joinRoom:
+    action: send
+    channel:
+      $ref: "#/channels/room"
+    messages:
+      - $ref: "#/channels/room/messages/joinRoom"
+    reply:
+      channel:
+        $ref: "#/channels/room"
+      messages:
+        - $ref: "#/channels/room/messages/joinRoomReply"
+components:
+  messages:
+    joinRoom:
+      payload:
+        $ref: "#/components/schemas/joinPayload"
+    joinRoomReply:
+      payload:
+        $ref: "#/components/schemas/joinReplyPayload"
+  schemas:
+    joinPayload:
+      type: object
+      properties:
+        user_id:
+          type: string
+      required:
+        - user_id
+    joinReplyPayload:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required:
+        - ok

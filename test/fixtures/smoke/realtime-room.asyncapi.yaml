@@ -1,0 +1,978 @@
+asyncapi: 3.1.0
+info:
+  title: Realtime Room Async API
+  version: 1.1.0
+  description: >
+    Real-time async API over Phoenix Channels for collaborative room sessions.
+
+    All room interactions go through a single Phoenix Channel per game room
+    (`room:{room_id}`) over the authenticated user socket.
+
+    The specification models Phoenix protocol events (`phx_join`, `phx_reply`,
+    `phx_error`, `phx_close`) together with application events (`state` and
+    room actions such as `start_game` or `get_provider`).
+  license:
+    name: MIT
+  tags:
+    - name: room
+      description: Multiplayer game room messaging
+    - name: phoenix
+      description: Phoenix Channel protocol semantics
+servers:
+  production:
+    host: "{domain}"
+    pathname: /socket/websocket
+    protocol: wss
+    description: Phoenix WebSocket endpoint in production
+    variables:
+      domain:
+        $ref: "#/components/serverVariables/domain"
+    bindings:
+      ws:
+        method: GET
+        query:
+          $ref: "#/components/schemas/socketConnectQuery"
+        bindingVersion: 0.1.0
+  development:
+    host: "{domain}:{port}"
+    pathname: /socket/websocket
+    protocol: ws
+    description: Local development Phoenix WebSocket endpoint
+    variables:
+      domain:
+        default: localhost
+      port:
+        $ref: "#/components/serverVariables/port"
+    bindings:
+      ws:
+        method: GET
+        query:
+          $ref: "#/components/schemas/socketConnectQuery"
+        bindingVersion: 0.1.0
+defaultContentType: application/json
+channels:
+  gameRoom:
+    address: "room:{room_id}"
+    title: Game Room
+    description: >
+      Phoenix Channel for a single collaborative room.
+
+      The channel is stateful: the server returns the initial room snapshot in
+      the join reply and pushes `state` after subsequent state transitions.
+      Challenging-phase timer data is embedded in `game.turn.deadline_at_ms`.
+    parameters:
+      room_id:
+        description: Human-readable room identifier, for example `happy-tiger-42`
+    messages:
+      phxJoin:
+        $ref: "#/components/messages/phxJoin"
+      phxJoinReply:
+        $ref: "#/components/messages/phxJoinReply"
+      phxError:
+        $ref: "#/components/messages/phxError"
+      phxClose:
+        $ref: "#/components/messages/phxClose"
+      stateOut:
+        $ref: "#/components/messages/stateOut"
+      startGame:
+        $ref: "#/components/messages/startGame"
+      startPlayback:
+        $ref: "#/components/messages/startPlayback"
+      startPlaybackReplyOk:
+        $ref: "#/components/messages/startPlaybackReplyOk"
+      pausePlayback:
+        $ref: "#/components/messages/pausePlayback"
+      pausePlaybackReplyOk:
+        $ref: "#/components/messages/pausePlaybackReplyOk"
+      advanceTurn:
+        $ref: "#/components/messages/advanceTurn"
+      advanceTurnReplyOk:
+        $ref: "#/components/messages/advanceTurnReplyOk"
+      makeAssumption:
+        $ref: "#/components/messages/makeAssumption"
+      makeAssumptionReplyOk:
+        $ref: "#/components/messages/makeAssumptionReplyOk"
+      makeAssumptionReplyUnknownEvent:
+        $ref: "#/components/messages/makeAssumptionReplyUnknownEvent"
+      getProvider:
+        $ref: "#/components/messages/getProvider"
+      getProviderReplyOk:
+        $ref: "#/components/messages/getProviderReplyOk"
+      getProviderReplyInvalidCredentials:
+        $ref: "#/components/messages/getProviderReplyInvalidCredentials"
+      updateProvider:
+        $ref: "#/components/messages/updateProvider"
+      updateProviderReplyOk:
+        $ref: "#/components/messages/updateProviderReplyOk"
+      updateProviderReplyProviderNotFound:
+        $ref: "#/components/messages/updateProviderReplyProviderNotFound"
+      unknownEventReply:
+        $ref: "#/components/messages/unknownEventReply"
+    bindings:
+      ws:
+        method: GET
+        bindingVersion: 0.1.0
+operations:
+  joinRoom:
+    action: send
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Join a game room
+    description: |
+      Client sends `phx_join` for the room topic.
+      On success the server confirms the join with the initial room snapshot.
+      On failure the join is rejected with `game_not_found`.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/phxJoin"
+    reply:
+      channel:
+        $ref: "#/channels/gameRoom"
+      messages:
+        - $ref: "#/channels/gameRoom/messages/phxJoinReply"
+  startGame:
+    action: send
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Start the game
+    description: |
+      Client sends `start_game` with an empty payload.
+      The channel intentionally does not reply to this event.
+      Success is observed via a subsequent `state` push.
+      Failures are logged server-side and also produce no reply.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/startGame"
+  startPlayback:
+    action: send
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Start playback
+    description: |
+      Client sends `start_playback` to start the current track.
+      Success returns `phx_reply` with empty `response`.
+      Failures are logged server-side and produce no reply.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/startPlayback"
+    reply:
+      channel:
+        $ref: "#/channels/gameRoom"
+      messages:
+        - $ref: "#/channels/gameRoom/messages/startPlaybackReplyOk"
+  pausePlayback:
+    action: send
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Pause playback
+    description: |
+      Client sends `pause_playback` to pause the current track.
+      Success returns `phx_reply` with empty `response`.
+      Failures are logged server-side and produce no reply.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/pausePlayback"
+    reply:
+      channel:
+        $ref: "#/channels/gameRoom"
+      messages:
+        - $ref: "#/channels/gameRoom/messages/pausePlaybackReplyOk"
+  advanceTurn:
+    action: send
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Advance the room to the next phase
+    description: |
+      Client sends `advance_turn` to move the game forward.
+      Success returns `phx_reply` with empty `response`.
+      The resulting game snapshot is delivered separately via `state`.
+      Failures are logged server-side and produce no reply.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/advanceTurn"
+    reply:
+      channel:
+        $ref: "#/channels/gameRoom"
+      messages:
+        - $ref: "#/channels/gameRoom/messages/advanceTurnReplyOk"
+  makeAssumption:
+    action: send
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Submit a position guess for the active track
+    description: |
+      Client sends `make_assumption` with a zero-based `position`.
+      Success returns `phx_reply` with empty `response`.
+      Domain failures or invalid integer parsing produce no reply.
+      If the payload shape does not match the expected contract at all
+      (for example missing `position`), the channel falls through to the generic
+      handler and replies with `unknown_event`.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/makeAssumption"
+    reply:
+      channel:
+        $ref: "#/channels/gameRoom"
+      messages:
+        - $ref: "#/channels/gameRoom/messages/makeAssumptionReplyOk"
+        - $ref: "#/channels/gameRoom/messages/makeAssumptionReplyUnknownEvent"
+  getProvider:
+    action: send
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Fetch the caller's provider access token
+    description: |
+      Client sends `get_provider` with an empty payload.
+      The server always replies:
+      - `ok` with `{ token }` when a valid provider access token exists
+      - `error` with `invalid_credentials` otherwise
+    messages:
+      - $ref: "#/channels/gameRoom/messages/getProvider"
+    reply:
+      channel:
+        $ref: "#/channels/gameRoom"
+      messages:
+        - $ref: "#/channels/gameRoom/messages/getProviderReplyOk"
+        - $ref: "#/channels/gameRoom/messages/getProviderReplyInvalidCredentials"
+  updateProvider:
+    action: send
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Patch the caller's provider state
+    description: |
+      Client sends `update_provider` with a partial provider patch.
+      The current frontend uses this primarily for `device_id`, but the channel
+      also accepts token-related fields.
+
+      The server replies:
+      - `ok` with empty `response` when the provider record exists
+      - `error` with `provider_not_found` when no provider record is available
+    messages:
+      - $ref: "#/channels/gameRoom/messages/updateProvider"
+    reply:
+      channel:
+        $ref: "#/channels/gameRoom"
+      messages:
+        - $ref: "#/channels/gameRoom/messages/updateProviderReplyOk"
+        - $ref: "#/channels/gameRoom/messages/updateProviderReplyProviderNotFound"
+  receiveState:
+    action: receive
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Receive the latest full room state
+    description: |
+      Server pushes `state`:
+      - immediately after a successful join
+      - after any game transition or state change
+
+      The payload includes the full `game` snapshot and the caller-specific
+      permission flags.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/stateOut"
+  receiveError:
+    action: receive
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Receive a Phoenix channel error event
+    description: |
+      Phoenix protocol-level error event emitted when the channel crashes
+      or the transport fails.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/phxError"
+  receiveClose:
+    action: receive
+    channel:
+      $ref: "#/channels/gameRoom"
+    summary: Receive a Phoenix channel close event
+    description: |
+      Phoenix protocol-level close event emitted on channel shutdown or leave.
+    messages:
+      - $ref: "#/channels/gameRoom/messages/phxClose"
+components:
+  serverVariables:
+    domain:
+      description: Server hostname for the WebSocket endpoint
+    port:
+      default: "5000"
+      description: Server port for the WebSocket endpoint
+  messages:
+    phxJoin:
+      name: phx_join
+      title: Join Room
+      summary: Join request for a room topic
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/joinPayload"
+      examples:
+        - name: join-empty
+          payload: {}
+    phxJoinReply:
+      name: phx_reply
+      title: Join Reply
+      summary: Join success or failure
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/joinReply"
+      examples:
+        - name: join-ok
+          payload:
+            status: ok
+            response:
+              game:
+                id: game-123
+                owner_id: owner123
+                max_participants: 8
+                max_score: 10
+                status: waiting
+                participants: {}
+                scores: {}
+                player:
+                  is_playback: false
+                timelines: {}
+                created_at: "2026-01-01T00:00:00Z"
+                queue: []
+                cursor: 0
+                track: null
+                turn: null
+              permissions:
+                can_control_playback: false
+                can_advance_turn: false
+                can_start_game: true
+                can_start_turn: false
+                can_restart_game: false
+                can_see_assumptions: false
+                can_make_assumptions: false
+        - name: join-error-game-not-found
+          payload:
+            status: error
+            response:
+              reason: game_not_found
+    phxError:
+      name: phx_error
+      title: Channel Error
+      summary: Phoenix channel error event
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/phxSystemPayload"
+      examples:
+        - name: error
+          payload:
+            reason: internal_error
+    phxClose:
+      name: phx_close
+      title: Channel Closed
+      summary: Phoenix channel close event
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/phxSystemPayload"
+      examples:
+        - name: close
+          payload:
+            reason: closed
+    stateOut:
+      name: state
+      title: State Push
+      summary: Full game state and caller permissions
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/statePayload"
+      examples:
+        - name: waiting-room
+          payload:
+            game:
+              id: happy-tiger-42
+              owner_id: owner123
+              max_participants: 10
+              max_score: 10
+              status: waiting
+              participants: {}
+              scores: {}
+              player:
+                is_playback: false
+              timelines: {}
+              created_at: "2026-03-20T12:00:00Z"
+              queue: []
+              cursor: 0
+              track: null
+              turn: null
+            permissions:
+              can_control_playback: false
+              can_advance_turn: false
+              can_start_game: true
+              can_start_turn: false
+              can_restart_game: false
+              can_see_assumptions: false
+              can_make_assumptions: false
+    startGame:
+      name: start_game
+      title: Start Game
+      summary: Request to start the room
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyPayload"
+      examples:
+        - name: start-game
+          payload: {}
+    startPlayback:
+      name: start_playback
+      title: Start Playback
+      summary: Request to start playback
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyPayload"
+      examples:
+        - name: start-playback
+          payload: {}
+    startPlaybackReplyOk:
+      name: phx_reply
+      title: Start Playback Reply
+      summary: Successful playback start reply
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyReply"
+      examples:
+        - name: ok
+          payload:
+            status: ok
+            response: {}
+    pausePlayback:
+      name: pause_playback
+      title: Pause Playback
+      summary: Request to pause playback
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyPayload"
+      examples:
+        - name: pause-playback
+          payload: {}
+    pausePlaybackReplyOk:
+      name: phx_reply
+      title: Pause Playback Reply
+      summary: Successful playback pause reply
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyReply"
+      examples:
+        - name: ok
+          payload:
+            status: ok
+            response: {}
+    advanceTurn:
+      name: advance_turn
+      title: Advance Turn
+      summary: Request to advance the room state
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyPayload"
+      examples:
+        - name: advance-turn
+          payload: {}
+    advanceTurnReplyOk:
+      name: phx_reply
+      title: Advance Turn Reply
+      summary: Successful turn advance reply
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyReply"
+      examples:
+        - name: ok
+          payload:
+            status: ok
+            response: {}
+    makeAssumption:
+      name: make_assumption
+      title: Make Assumption
+      summary: Submit a guessed position
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/assumptionPayload"
+      examples:
+        - name: guess-position-zero
+          payload:
+            position: 0
+    makeAssumptionReplyOk:
+      name: phx_reply
+      title: Make Assumption Reply
+      summary: Successful assumption reply
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyReply"
+      examples:
+        - name: ok
+          payload:
+            status: ok
+            response: {}
+    makeAssumptionReplyUnknownEvent:
+      name: phx_reply
+      title: Make Assumption Unknown Event Reply
+      summary: Error reply when the payload shape misses required fields
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/unknownEventReply"
+      examples:
+        - name: missing-position
+          payload:
+            status: error
+            response:
+              reason: unknown_event
+              event: make_assumption
+    getProvider:
+      name: get_provider
+      title: Get Provider
+      summary: Request the caller's provider access token
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyPayload"
+      examples:
+        - name: get-provider
+          payload: {}
+    getProviderReplyOk:
+      name: phx_reply
+      title: Get Provider Reply
+      summary: Successful provider token reply
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/providerTokenReply"
+      examples:
+        - name: token
+          payload:
+            status: ok
+            response:
+              token: provider-access-token
+    getProviderReplyInvalidCredentials:
+      name: phx_reply
+      title: Get Provider Error Reply
+      summary: Invalid credentials provider reply
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/invalidCredentialsReply"
+      examples:
+        - name: invalid-credentials
+          payload:
+            status: error
+            response:
+              reason: invalid_credentials
+    updateProvider:
+      name: update_provider
+      title: Update Provider
+      summary: Patch the caller's provider record
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/updateProviderPayload"
+      examples:
+        - name: update-device
+          payload:
+            device_id: playback-device-1
+        - name: update-token
+          payload:
+            access_token: refreshed-token
+            refresh_token: refreshed-refresh-token
+    updateProviderReplyOk:
+      name: phx_reply
+      title: Update Provider Reply
+      summary: Successful provider update reply
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/emptyReply"
+      examples:
+        - name: ok
+          payload:
+            status: ok
+            response: {}
+    updateProviderReplyProviderNotFound:
+      name: phx_reply
+      title: Update Provider Error Reply
+      summary: Provider missing for the current user
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/providerNotFoundReply"
+      examples:
+        - name: provider-not-found
+          payload:
+            status: error
+            response:
+              reason: provider_not_found
+    unknownEventReply:
+      name: phx_reply
+      title: Unknown Event Reply
+      summary: Generic error reply for unknown client events
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/unknownEventReply"
+      examples:
+        - name: unknown-event
+          payload:
+            status: error
+            response:
+              reason: unknown_event
+              event: unknown_event
+  schemas:
+    socketConnectQuery:
+      type: object
+      description: Query parameters used during socket connection setup
+      properties:
+        vsn:
+          type: string
+          const: "2.0.0"
+          description: Phoenix serializer version sent by the client
+        user_token:
+          type: string
+          description: >
+            Signed user token supplied during socket authentication
+      required:
+        - vsn
+        - user_token
+      additionalProperties: false
+    joinPayload:
+      type: object
+      description: Join payload accepted by the room channel
+      additionalProperties: true
+    joinReply:
+      oneOf:
+        - type: object
+          required:
+            - status
+            - response
+          properties:
+            status:
+              const: ok
+            response:
+              $ref: "#/components/schemas/statePayload"
+          additionalProperties: false
+        - type: object
+          required:
+            - status
+            - response
+          properties:
+            status:
+              const: error
+            response:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  const: game_not_found
+              additionalProperties: false
+          additionalProperties: false
+    phxSystemPayload:
+      type: object
+      description: Phoenix protocol payload for lifecycle events
+      additionalProperties: true
+    statePayload:
+      type: object
+      required:
+        - game
+        - permissions
+      properties:
+        game:
+          $ref: "#/components/schemas/game"
+        permissions:
+          $ref: "#/components/schemas/permissions"
+      additionalProperties: false
+    game:
+      type: object
+      description: Serialized room state snapshot
+      required:
+        - id
+        - owner_id
+        - max_participants
+        - max_score
+        - status
+        - participants
+        - scores
+        - player
+        - timelines
+        - created_at
+        - queue
+        - cursor
+        - track
+        - turn
+      properties:
+        id:
+          type: string
+        owner_id:
+          type: string
+        max_participants:
+          type: integer
+          minimum: 1
+        max_score:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum:
+            - waiting
+            - in_progress
+            - finished
+        participants:
+          type: object
+          description: Connected and known room participants keyed by user id
+          additionalProperties:
+            $ref: "#/components/schemas/user"
+        scores:
+          type: object
+          description: Per-user scores keyed by user id
+          additionalProperties:
+            type: integer
+        player:
+          oneOf:
+            - $ref: "#/components/schemas/player"
+            - type: "null"
+        timelines:
+          type: object
+          description: Per-user ordered timelines keyed by user id
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/track"
+        created_at:
+          type: string
+          format: date-time
+        queue:
+          type: array
+          items:
+            type: string
+        cursor:
+          type: integer
+          minimum: 0
+        track:
+          oneOf:
+            - $ref: "#/components/schemas/track"
+            - type: "null"
+        turn:
+          oneOf:
+            - $ref: "#/components/schemas/turn"
+            - type: "null"
+      additionalProperties: false
+    user:
+      type: object
+      description: Serialized participant profile
+      required:
+        - uuid
+        - name
+        - avatar_url
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        avatar_url:
+          type: string
+      additionalProperties: false
+    player:
+      type: object
+      description: Serialized playback controller state
+      required:
+        - is_playback
+      properties:
+        is_playback:
+          type: boolean
+      additionalProperties: false
+    turn:
+      type: object
+      description: Serialized turn state
+      required:
+        - phase
+        - assumptions
+        - winner_id
+        - deadline_at_ms
+      properties:
+        phase:
+          type: string
+          enum:
+            - waiting
+            - ready
+            - challenging
+            - results
+        assumptions:
+          type: object
+          description: >
+            Map keyed by JSON stringified zero-based positions.
+            Values are user ids.
+          additionalProperties:
+            type: string
+        winner_id:
+          oneOf:
+            - type: string
+            - type: "null"
+        deadline_at_ms:
+          oneOf:
+            - type: integer
+              minimum: 0
+            - type: "null"
+          description: >
+            Authoritative challenging-phase deadline as Unix epoch time in
+            milliseconds. Null outside time-bound phases.
+      additionalProperties: false
+    track:
+      type: object
+      description: Serialized media item
+      required:
+        - id
+        - title
+        - artist
+        - year
+        - cover_url
+        - meta
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        artist:
+          type: string
+        year:
+          type: integer
+        cover_url:
+          oneOf:
+            - type: string
+            - type: "null"
+        meta:
+          type: object
+          properties:
+            preview_url:
+              type: string
+            uri:
+              type: string
+          additionalProperties: true
+      additionalProperties: false
+    permissions:
+      type: object
+      description: Caller-specific permissions for the current room state
+      required:
+        - can_control_playback
+        - can_advance_turn
+        - can_start_game
+        - can_start_turn
+        - can_restart_game
+        - can_see_assumptions
+        - can_make_assumptions
+      properties:
+        can_control_playback:
+          type: boolean
+        can_advance_turn:
+          type: boolean
+        can_start_game:
+          type: boolean
+        can_start_turn:
+          type: boolean
+        can_restart_game:
+          type: boolean
+        can_see_assumptions:
+          type: boolean
+        can_make_assumptions:
+          type: boolean
+      additionalProperties: false
+    emptyPayload:
+      type: object
+      description: Event without application payload fields
+      additionalProperties: false
+    assumptionPayload:
+      type: object
+      required:
+        - position
+      properties:
+        position:
+          type: integer
+          minimum: 0
+          description: Zero-based insertion position in the active player's timeline
+      additionalProperties: false
+    updateProviderPayload:
+      type: object
+      description: >
+        Partial provider patch accepted by `update_provider`.
+        Unknown keys are ignored by the current provider update logic.
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        device_id:
+          type: string
+      additionalProperties: true
+    emptyReply:
+      type: object
+      required:
+        - status
+        - response
+      properties:
+        status:
+          const: ok
+        response:
+          type: object
+          additionalProperties: true
+      additionalProperties: false
+    providerTokenReply:
+      type: object
+      required:
+        - status
+        - response
+      properties:
+        status:
+          const: ok
+        response:
+          type: object
+          required:
+            - token
+          properties:
+            token:
+              type: string
+          additionalProperties: false
+      additionalProperties: false
+    invalidCredentialsReply:
+      type: object
+      required:
+        - status
+        - response
+      properties:
+        status:
+          const: error
+        response:
+          type: object
+          required:
+            - reason
+          properties:
+            reason:
+              const: invalid_credentials
+          additionalProperties: false
+      additionalProperties: false
+    providerNotFoundReply:
+      type: object
+      required:
+        - status
+        - response
+      properties:
+        status:
+          const: error
+        response:
+          type: object
+          required:
+            - reason
+          properties:
+            reason:
+              const: provider_not_found
+          additionalProperties: false
+      additionalProperties: false
+    unknownEventReply:
+      type: object
+      required:
+        - status
+        - response
+      properties:
+        status:
+          const: error
+        response:
+          type: object
+          required:
+            - reason
+            - event
+          properties:
+            reason:
+              const: unknown_event
+            event:
+              type: string
+          additionalProperties: false
+      additionalProperties: false
+  securitySchemes:
+    socketToken:
+      type: httpApiKey
+      name: user_token
+      in: query
+      description: >
+        Signed user token passed as the `user_token` query parameter during
+        socket connection setup.

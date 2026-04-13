@@ -1,0 +1,10 @@
+asyncapi: 3.0.0
+info:
+  title: Channel Parameter Regression
+  version: 1.0.0
+channels:
+  room:
+    address: "room:{room_id}"
+    parameters:
+      room_id:
+        description: Room identifier
