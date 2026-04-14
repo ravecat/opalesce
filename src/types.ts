@@ -49,6 +49,18 @@ export interface UserConfig {
   plugins?: PluginInstance[];
 }
 
+export interface RunGenerationOptions {
+  cwd?: string;
+  config: UserConfig;
+}
+
+export interface RunGenerationResult {
+  cwd: string;
+  config: UserConfig;
+  diagnostics: Diagnostic[];
+  artifacts: GeneratedArtifact[];
+}
+
 export interface GenerateOptions {
   cwd?: string;
   config?: string;

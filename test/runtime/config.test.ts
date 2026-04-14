@@ -27,4 +27,38 @@ describe("loadConfig", () => {
       await rm(workspace, { recursive: true, force: true });
     }
   });
+
+  test("applies explicit input and out overrides", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "asyncapi-codegen-"));
+    const outDir = join(workspace, "override-output");
+
+    try {
+      const configPath = join(workspace, "custom.config.mjs");
+
+      await writeFile(
+        configPath,
+        `export default {
+  input: { path: "./test/fixtures/smoke/basic.asyncapi.yaml" },
+  output: { path: "./generated" },
+  plugins: [],
+};
+`,
+      );
+
+      await expect(
+        loadConfig({
+          cwd: process.cwd(),
+          configPath,
+          input: "./test/fixtures/regressions/reply-payload.asyncapi.yaml",
+          out: outDir,
+        }),
+      ).resolves.toEqual({
+        input: { path: "./test/fixtures/regressions/reply-payload.asyncapi.yaml" },
+        output: { path: outDir },
+        plugins: [],
+      });
+    } finally {
+      await rm(workspace, { recursive: true, force: true });
+    }
+  });
 });

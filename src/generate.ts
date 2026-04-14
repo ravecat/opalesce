@@ -1,11 +1,7 @@
 import { loadConfig } from "~/config";
-import { PluginManager } from "~/runtime/PluginManager";
+import { runGeneration } from "~/runtime/runGeneration";
 import { writeArtifacts } from "~/runtime/writeArtifacts";
-import type {
-  GenerateOptions,
-  GenerateResult,
-  GenerationContext,
-} from "~/types";
+import type { GenerateOptions, GenerateResult } from "~/types";
 
 export async function generate(
   options: GenerateOptions = {},
@@ -18,28 +14,21 @@ export async function generate(
     out: options.out,
   });
 
-  const pluginManager = new PluginManager(config);
-  const context: GenerationContext = {
+  const result = await runGeneration({
     cwd,
     config,
-    asyncapi: null,
-    graph: null,
-    diagnostics: [],
-    artifacts: [],
-  };
-
-  await pluginManager.run(context);
+  });
 
   const outDir = await writeArtifacts({
-    cwd,
-    outDir: config.output.path,
-    artifacts: context.artifacts,
+    cwd: result.cwd,
+    outDir: result.config.output.path,
+    artifacts: result.artifacts,
   });
 
   return {
-    total: context.artifacts.length,
+    total: result.artifacts.length,
     outDir,
-    diagnostics: context.diagnostics,
-    artifacts: context.artifacts,
+    diagnostics: result.diagnostics,
+    artifacts: result.artifacts,
   };
 }
