@@ -1,6 +1,7 @@
 name: release
 run-name: >-
   ${{
+    github.ref_name == 'beta' && 'Release publish' ||
     github.event_name == 'workflow_dispatch' &&
       (inputs.confirm_publish && 'Release publish' || 'Release preview') ||
       'Release preview'
@@ -66,13 +67,24 @@ jobs:
         run: pnpm build
 
       - name: Release preview
-        if: github.event_name == 'push' || !inputs.confirm_publish
+        if: >-
+          github.ref_name == env.DEFAULT_BRANCH &&
+          !(
+            github.event_name == 'workflow_dispatch' &&
+            inputs.confirm_publish
+          )
         run: pnpm exec semantic-release --dry-run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish release
-        if: github.event_name == 'workflow_dispatch' && inputs.confirm_publish
+        if: >-
+          github.ref_name == 'beta' ||
+          (
+            github.ref_name == env.DEFAULT_BRANCH &&
+            github.event_name == 'workflow_dispatch' &&
+            inputs.confirm_publish
+          )
         run: pnpm exec semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
