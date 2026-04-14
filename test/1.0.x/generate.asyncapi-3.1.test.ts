@@ -10,6 +10,8 @@ import {
 } from "../support/createGenerationConfig";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
+const GENERATED_GITATTRIBUTES =
+  "* linguist-generated=true\n**/* linguist-generated=true\n";
 
 describe("generate 1.0.x - AsyncAPI 3.1", () => {
   test("generates artifacts for the anonymized realtime room fixture", async () => {
@@ -34,7 +36,9 @@ describe("generate 1.0.x - AsyncAPI 3.1", () => {
 
       expect(result.diagnostics).toEqual([]);
       expect(result.artifacts).toHaveLength(82);
-      const artifactPaths = result.artifacts.map((artifact) => artifact.filePath);
+      const artifactPaths = result.artifacts.map(
+        (artifact) => artifact.filePath,
+      );
       expect(new Set(artifactPaths).size).toBe(result.artifacts.length);
       expect(artifactPaths).toEqual(
         expect.arrayContaining([
@@ -50,6 +54,12 @@ describe("generate 1.0.x - AsyncAPI 3.1", () => {
           "zod/UpdateProviderPayloadSchemaSchema.ts",
         ]),
       );
+
+      const gitAttributes = await readFile(
+        join(outDir, ".gitattributes"),
+        "utf8",
+      );
+      expect(gitAttributes).toBe(GENERATED_GITATTRIBUTES);
 
       const rootIndex = await readFile(join(outDir, "index.ts"), "utf8");
       expect(rootIndex).toBe(

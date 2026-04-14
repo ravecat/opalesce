@@ -3,6 +3,9 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import prettier from "prettier";
 import type { GeneratedArtifact } from "~/types";
 
+const GENERATED_GITATTRIBUTES =
+  "* linguist-generated=true\n**/* linguist-generated=true\n";
+
 function toPosixPath(value: string): string {
   return value.replaceAll("\\", "/");
 }
@@ -101,15 +104,22 @@ export async function writeArtifacts({
     files.set(artifact.filePath, artifact.code);
   }
 
+  if (files.size > 0) {
+    files.set(".gitattributes", GENERATED_GITATTRIBUTES);
+  }
+
   for (const [relativePath, code] of [...files.entries()].sort(
     ([left], [right]) => left.localeCompare(right),
   )) {
     const absolutePath = resolve(resolvedOutDir, relativePath);
     mkdirSync(dirname(absolutePath), { recursive: true });
-    const formatted = await prettier.format(code, {
-      ...(prettierConfig ?? {}),
-      filepath: absolutePath,
-    });
+    const formatted =
+      relativePath === ".gitattributes"
+        ? code
+        : await prettier.format(code, {
+            ...(prettierConfig ?? {}),
+            filepath: absolutePath,
+          });
     writeFileSync(absolutePath, formatted);
   }
 
