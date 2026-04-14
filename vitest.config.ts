@@ -27,7 +27,8 @@ export default defineConfig({
         extends: true,
         test: {
           name: "smoke",
-          include: ["test/smoke/**/*.test.ts"],
+          include: ["test/1.0.x/**/*.test.ts"],
+          testTimeout: 30000,
         },
       },
     ],

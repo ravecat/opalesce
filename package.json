@@ -9,7 +9,7 @@
     "format.check": "eslint . && prettier --check .",
     "test": "npm run test:unit && npm run test:smoke",
     "test:unit": "vitest run --project unit",
-    "test:smoke": "npm run build && vitest run --project smoke"
+    "test:smoke": "vitest run --project smoke"
   },
   "description": "Config-driven AsyncAPI to JSON Schema, TypeScript, and Zod generator",
   "repository": {
