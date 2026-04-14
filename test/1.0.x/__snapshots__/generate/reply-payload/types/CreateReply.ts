@@ -3,6 +3,6 @@
  * Do not edit manually.
  */
 
-export interface JoinRoomPayload {
-  user_id: string;
+export interface CreateReply {
+  accepted: boolean;
 }

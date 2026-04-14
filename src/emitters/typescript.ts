@@ -1,8 +1,9 @@
 import { compile, type JSONSchema } from "json-schema-to-typescript";
+import { matchesInclude } from "~/core/include";
 import type {
   AsyncApiEntityGraph,
-  EntityKind,
   GeneratedArtifact,
+  IncludeSelector,
 } from "~/types";
 
 const BANNER = `/**
@@ -44,12 +45,14 @@ export async function emitTypescriptArtifacts({
 }: {
   graph: AsyncApiEntityGraph;
   outputPath: string;
-  include?: EntityKind[];
+  include?: IncludeSelector[];
 }): Promise<GeneratedArtifact[]> {
   return Promise.all(
     graph.entities
       .filter((entity) =>
-        Array.isArray(include) ? include.includes(entity.kind) : true,
+        Array.isArray(include)
+          ? include.some((selector) => matchesInclude(entity, selector))
+          : true,
       )
       .map(async (entity) => ({
         kind: "types" as const,

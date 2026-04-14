@@ -3,6 +3,6 @@
  * Do not edit manually.
  */
 
-export interface CreateReplyPayload {
-  accepted: boolean;
+export interface Create {
+  id: string;
 }

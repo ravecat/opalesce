@@ -5,4 +5,4 @@
 
 import { z } from "zod/v4";
 
-export const roomRoomIdParameterSchema = z.string().describe("Room identifier");
+export const createReplySchema = z.object({ accepted: z.boolean() });

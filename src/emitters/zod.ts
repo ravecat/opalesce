@@ -1,9 +1,10 @@
 import { jsonSchemaToZod } from "json-schema-to-zod";
 import { camelCase } from "~/core/naming";
+import { matchesInclude } from "~/core/include";
 import type {
   AsyncApiEntityGraph,
-  EntityKind,
   GeneratedArtifact,
+  IncludeSelector,
 } from "~/types";
 
 const BANNER = `/**
@@ -69,11 +70,13 @@ export function emitZodArtifacts({
 }: {
   graph: AsyncApiEntityGraph;
   outputPath: string;
-  include?: EntityKind[];
+  include?: IncludeSelector[];
 }): GeneratedArtifact[] {
   return graph.entities
     .filter((entity) =>
-      Array.isArray(include) ? include.includes(entity.kind) : true,
+      Array.isArray(include)
+        ? include.some((selector) => matchesInclude(entity, selector))
+        : true,
     )
     .map((entity) => {
       const exportName = `${camelCase(entity.name)}Schema`;

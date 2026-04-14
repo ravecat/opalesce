@@ -53,7 +53,9 @@ describe("loadConfig", () => {
           out: outDir,
         }),
       ).resolves.toEqual({
-        input: { path: "./test/fixtures/regressions/reply-payload.asyncapi.yaml" },
+        input: {
+          path: "./test/fixtures/regressions/reply-payload.asyncapi.yaml",
+        },
         output: { path: outDir },
         plugins: [],
       });

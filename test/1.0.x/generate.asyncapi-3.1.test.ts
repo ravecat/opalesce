@@ -35,7 +35,7 @@ describe("generate 1.0.x - AsyncAPI 3.1", () => {
       });
 
       expect(result.diagnostics).toEqual([]);
-      expect(result.artifacts).toHaveLength(82);
+      expect(result.artifacts).toHaveLength(40);
       const artifactPaths = result.artifacts.map(
         (artifact) => artifact.filePath,
       );
@@ -43,13 +43,22 @@ describe("generate 1.0.x - AsyncAPI 3.1", () => {
       expect(artifactPaths).toEqual(
         expect.arrayContaining([
           "types/Game.ts",
-          "types/GameRoomRoomIdParameter.ts",
-          "types/GetProviderInvalidCredentialsReplyPayload.ts",
-          "types/JoinRoomReplyPayload.ts",
-          "types/UpdateProviderPayloadPayload.ts",
-          "types/UpdateProviderPayloadSchema.ts",
+          "types/RoomId.ts",
+          "types/InvalidCredentialsReply.ts",
+          "types/JoinReply.ts",
+          "types/UpdateProviderPayload.ts",
           "zod/GameSchema.ts",
           "zod/TurnSchema.ts",
+          "zod/RoomIdSchema.ts",
+          "zod/InvalidCredentialsReplySchema.ts",
+          "zod/UpdateProviderPayloadSchema.ts",
+        ]),
+      );
+      expect(artifactPaths).not.toEqual(
+        expect.arrayContaining([
+          "types/GameRoomRoomIdParameter.ts",
+          "types/GetProviderInvalidCredentialsReplyPayload.ts",
+          "types/UpdateProviderPayloadPayload.ts",
           "zod/UpdateProviderPayloadPayloadSchema.ts",
           "zod/UpdateProviderPayloadSchemaSchema.ts",
         ]),
@@ -67,7 +76,7 @@ describe("generate 1.0.x - AsyncAPI 3.1", () => {
       );
 
       const providerReply = await readFile(
-        join(outDir, "types/GetProviderInvalidCredentialsReplyPayload.ts"),
+        join(outDir, "types/InvalidCredentialsReply.ts"),
         "utf8",
       );
       expect(providerReply).toContain('"invalid_credentials"');

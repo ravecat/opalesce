@@ -5,8 +5,6 @@ import type {
   OperationInterface,
   SchemaInterface,
 } from "@asyncapi/parser";
-import type { AsyncApiEntitySeed } from "~/types";
-import { resolveEntityNames } from "~/core/naming";
 
 export class AsyncApiDocument {
   document: AsyncAPIDocumentInterface;
@@ -30,9 +28,5 @@ export class AsyncApiDocument {
 
   getChannels(): ChannelInterface[] {
     return [...(this.document.channels?.() ?? [])];
-  }
-
-  resolveNames(entities: AsyncApiEntitySeed[]): AsyncApiEntitySeed[] {
-    return resolveEntityNames(entities);
   }
 }

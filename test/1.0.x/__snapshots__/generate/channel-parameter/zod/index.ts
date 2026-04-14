@@ -1,1 +1,1 @@
-export { roomRoomIdParameterSchema } from "./RoomRoomIdParameterSchema.js";
+export { roomIdSchema } from "./RoomIdSchema.js";

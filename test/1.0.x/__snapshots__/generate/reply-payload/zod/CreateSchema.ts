@@ -5,4 +5,4 @@
 
 import { z } from "zod/v4";
 
-export const createReplyPayloadSchema = z.object({ accepted: z.boolean() });
+export const createSchema = z.object({ id: z.string() });

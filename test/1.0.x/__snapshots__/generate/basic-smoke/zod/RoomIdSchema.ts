@@ -5,4 +5,4 @@
 
 import { z } from "zod/v4";
 
-export const joinRoomReplyPayloadSchema = z.object({ ok: z.boolean() });
+export const roomIdSchema = z.string().describe("Room identifier");

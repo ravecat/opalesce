@@ -1,0 +1,23 @@
+asyncapi: 3.1.0
+info:
+  title: Canonical Identity Regression
+  version: 1.0.0
+channels: {}
+operations:
+  state:
+    action: receive
+    messages:
+      - $ref: "#/components/messages/state"
+components:
+  messages:
+    state:
+      payload:
+        $ref: "#/components/schemas/game"
+  schemas:
+    game:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string

@@ -7,7 +7,7 @@ import type {
 import type { AsyncApiDocument } from "~/core/AsyncApiDocument";
 import { pascalCase } from "~/core/naming";
 import { normalizeSchema } from "~/core/normalizeSchema";
-import type { AsyncApiEntity } from "~/types";
+import type { AsyncApiEntitySeed, EntityScope } from "~/types";
 
 function getMessageVariant(operationId: string, messageId: string): string {
   const operationName = pascalCase(operationId);
@@ -78,8 +78,8 @@ export class OperationGenerator {
     this.asyncapi = asyncapi;
   }
 
-  async build(): Promise<AsyncApiEntity[]> {
-    const entities: AsyncApiEntity[] = [];
+  async build(): Promise<AsyncApiEntitySeed[]> {
+    const entities: AsyncApiEntitySeed[] = [];
 
     for (const [index, operation] of (
       this.asyncapi.getOperations() as OperationInterface[]
@@ -96,15 +96,32 @@ export class OperationGenerator {
         const headers = message.headers?.();
 
         if (payload) {
+          const schemaId = getSchemaId(payload.id?.());
           entities.push({
             id: `operations.${operationId}.messages.${messageId}.payload`,
-            kind: "message-payload",
-            baseName: getPayloadBaseName(
+            source: "operation",
+            role: "payload",
+            scope: "message",
+            canonicalKey: getOperationCanonicalKey({
+              operationId,
+              messageId,
+              role: "payload",
+              scope: "message",
+              schemaId,
+            }),
+            displayNameHint: getPayloadBaseName(
               operationId,
               messageId,
               messages.length,
             ),
-            name: getPayloadBaseName(operationId, messageId, messages.length),
+            namespaceHint: operationId,
+            identity: {
+              schemaId,
+              schemaTitle: payload.title?.(),
+              operationId,
+              messageId,
+              messageTitle: message.title?.(),
+            },
             schema: await normalizeSchema({
               schemaModel: payload,
               schemaFormat: message.schemaFormat?.(),
@@ -117,19 +134,27 @@ export class OperationGenerator {
         if (headers) {
           entities.push({
             id: `operations.${operationId}.messages.${messageId}.headers`,
-            kind: "message-header",
-            baseName: getHeadersBaseName(
+            source: "operation",
+            role: "header",
+            scope: "message",
+            canonicalKey: getOperationCanonicalKey({
+              operationId,
+              messageId,
+              role: "header",
+              scope: "message",
+            }),
+            displayNameHint: getHeadersBaseName(
               operationId,
               messageId,
               messages.length,
               "message",
             ),
-            name: getHeadersBaseName(
+            namespaceHint: operationId,
+            identity: {
               operationId,
               messageId,
-              messages.length,
-              "message",
-            ),
+              messageTitle: message.title?.(),
+            },
             schema: await normalizeSchema({
               schemaModel: headers,
               name: `${operationId}.${messageId}.headers`,
@@ -151,19 +176,32 @@ export class OperationGenerator {
         const headers = message.headers?.();
 
         if (payload) {
+          const schemaId = getSchemaId(payload.id?.());
           entities.push({
             id: `operations.${operationId}.reply.messages.${messageId}.payload`,
-            kind: "reply-payload",
-            baseName: getReplyBaseName(
+            source: "operation",
+            role: "payload",
+            scope: "reply",
+            canonicalKey: getOperationCanonicalKey({
+              operationId,
+              messageId,
+              role: "payload",
+              scope: "reply",
+              schemaId,
+            }),
+            displayNameHint: getReplyBaseName(
               operationId,
               messageId,
               replyMessages.length,
             ),
-            name: getReplyBaseName(
+            namespaceHint: operationId,
+            identity: {
+              schemaId,
+              schemaTitle: payload.title?.(),
               operationId,
               messageId,
-              replyMessages.length,
-            ),
+              messageTitle: message.title?.(),
+            },
             schema: await normalizeSchema({
               schemaModel: payload,
               schemaFormat: message.schemaFormat?.(),
@@ -176,19 +214,27 @@ export class OperationGenerator {
         if (headers) {
           entities.push({
             id: `operations.${operationId}.reply.messages.${messageId}.headers`,
-            kind: "message-header",
-            baseName: getHeadersBaseName(
+            source: "operation",
+            role: "header",
+            scope: "reply",
+            canonicalKey: getOperationCanonicalKey({
+              operationId,
+              messageId,
+              role: "header",
+              scope: "reply",
+            }),
+            displayNameHint: getHeadersBaseName(
               operationId,
               messageId,
               replyMessages.length,
               "reply",
             ),
-            name: getHeadersBaseName(
+            namespaceHint: operationId,
+            identity: {
               operationId,
               messageId,
-              replyMessages.length,
-              "reply",
-            ),
+              messageTitle: message.title?.(),
+            },
             schema: await normalizeSchema({
               schemaModel: headers,
               name: `${operationId}.${messageId}.reply.headers`,
@@ -218,9 +264,15 @@ export class OperationGenerator {
 
         entities.push({
           id: `channels.${channelId}.parameters.${parameterId}`,
-          kind: "channel-parameter",
-          baseName: `${channelId} ${parameterId} Parameter`,
-          name: `${channelId} ${parameterId} Parameter`,
+          source: "channel",
+          role: "parameter",
+          canonicalKey: `channel:${channelId}:parameter:${parameterId}`,
+          displayNameHint: `${channelId} ${parameterId}`,
+          namespaceHint: channelId,
+          identity: {
+            channelId,
+            parameterId,
+          },
           schema: await normalizeSchema({
             schemaModel: schema,
             name: `${channelId}.${parameterId}.parameter`,
@@ -232,4 +284,32 @@ export class OperationGenerator {
 
     return entities;
   }
+}
+
+function getSchemaId(value: string | undefined): string | undefined {
+  if (!value || /^<anonymous-schema-\d+>$/.test(value)) {
+    return undefined;
+  }
+
+  return value;
+}
+
+function getOperationCanonicalKey({
+  operationId,
+  messageId,
+  role,
+  scope,
+  schemaId,
+}: {
+  operationId: string;
+  messageId: string;
+  role: "payload" | "header";
+  scope: EntityScope;
+  schemaId?: string;
+}): string {
+  if (role === "payload" && schemaId) {
+    return `component:${schemaId}`;
+  }
+
+  return `operation:${operationId}:${scope}:${messageId}:${role}`;
 }

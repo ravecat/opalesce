@@ -9,7 +9,9 @@ describe("emitZodArtifacts", () => {
         entities: [
           {
             id: "operations.userCreated.payload",
-            kind: "message-payload",
+            source: "operation",
+            role: "payload",
+            scope: "message",
             name: "UserCreatedPayload",
             schema: {
               type: "object",

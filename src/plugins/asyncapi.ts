@@ -1,15 +1,17 @@
+import { canonicalizeEntities } from "~/core/canonicalizeEntities";
 import { createEntityGraph } from "~/core/entityGraph";
-import type { AsyncApiEntity } from "~/types";
 import { OperationGenerator } from "~/core/generators/OperationGenerator";
 import { SchemaGenerator } from "~/core/generators/SchemaGenerator";
+import { normalizeInclude } from "~/core/include";
+import { assignEntityNames } from "~/core/naming";
 import { loadFromConfig } from "~/core/loadFromConfig";
 import { definePlugin } from "~/plugins/definePlugin";
 import { emitJsonSchemaArtifacts } from "~/emitters/json-schema";
-import type { EntityKind, PluginInstance } from "~/types";
+import type { IncludeSelector, PluginInstance } from "~/types";
 
 interface AsyncApiPluginOptions {
   output?: { path?: string } | false;
-  include?: EntityKind[];
+  include?: IncludeSelector[];
 }
 
 function normalizeOutput(
@@ -34,6 +36,7 @@ export const asyncapi = definePlugin(
     }
   > => {
     const output = normalizeOutput(options.output, "schemas");
+    const include = normalizeInclude(options.include);
 
     return {
       name: "asyncapi",
@@ -56,10 +59,12 @@ export const asyncapi = definePlugin(
         const schemaGenerator = new SchemaGenerator(asyncapi);
         const operationGenerator = new OperationGenerator(asyncapi);
         const graph = createEntityGraph(
-          asyncapi.resolveNames([
-            ...(await schemaGenerator.build()),
-            ...(await operationGenerator.build()),
-          ]) as AsyncApiEntity[],
+          assignEntityNames(
+            canonicalizeEntities([
+              ...(await schemaGenerator.build()),
+              ...(await operationGenerator.build()),
+            ]),
+          ),
         );
 
         this.asyncapi = asyncapi;
@@ -73,7 +78,7 @@ export const asyncapi = definePlugin(
         const artifacts = emitJsonSchemaArtifacts({
           graph,
           outputPath: output.path,
-          include: options.include,
+          include,
         });
 
         for (const artifact of artifacts) {

@@ -3,6 +3,7 @@
  * Do not edit manually.
  */
 
-export interface JoinRoomReplyPayload {
-  ok: boolean;
-}
+/**
+ * Room identifier
+ */
+export type RoomId = string;

@@ -21,11 +21,11 @@ function createReplyPayloadPlugins(): PluginInstance[] {
     asyncapi({ output: false }),
     typescript({
       output: { path: "types" },
-      include: ["message-payload", "reply-payload"],
+      include: ["operations.messages.payloads", "operations.replies.payloads"],
     }),
     zod({
       output: { path: "zod" },
-      include: ["message-payload", "reply-payload"],
+      include: ["operations.messages.payloads", "operations.replies.payloads"],
     }),
   ];
 }
@@ -35,11 +35,11 @@ function createChannelParameterPlugins(): PluginInstance[] {
     asyncapi({ output: false }),
     typescript({
       output: { path: "types" },
-      include: ["channel-parameter"],
+      include: ["channels.parameters"],
     }),
     zod({
       output: { path: "zod" },
-      include: ["channel-parameter"],
+      include: ["channels.parameters"],
     }),
   ];
 }

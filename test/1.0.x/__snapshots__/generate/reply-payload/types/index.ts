@@ -1,2 +1,2 @@
-export type { CreatePayload } from "./CreatePayload.js";
-export type { CreateReplyPayload } from "./CreateReplyPayload.js";
+export type { Create } from "./Create.js";
+export type { CreateReply } from "./CreateReply.js";

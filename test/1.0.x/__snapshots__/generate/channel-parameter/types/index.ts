@@ -1,1 +1,1 @@
-export type { RoomRoomIdParameter } from "./RoomRoomIdParameter.js";
+export type { RoomId } from "./RoomId.js";

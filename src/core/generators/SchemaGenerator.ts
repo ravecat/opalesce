@@ -1,7 +1,7 @@
 import type { SchemaInterface } from "@asyncapi/parser";
 import type { AsyncApiDocument } from "~/core/AsyncApiDocument";
 import { normalizeSchema } from "~/core/normalizeSchema";
-import type { AsyncApiEntity } from "~/types";
+import type { AsyncApiEntitySeed } from "~/types";
 
 export class SchemaGenerator {
   asyncapi: AsyncApiDocument;
@@ -10,17 +10,22 @@ export class SchemaGenerator {
     this.asyncapi = asyncapi;
   }
 
-  async build(): Promise<AsyncApiEntity[]> {
-    const entities: AsyncApiEntity[] = [];
+  async build(): Promise<AsyncApiEntitySeed[]> {
+    const entities: AsyncApiEntitySeed[] = [];
 
     for (const schemaModel of this.asyncapi.getComponentSchemas() as SchemaInterface[]) {
       const schemaId = schemaModel.id?.() ?? "Schema";
 
       entities.push({
         id: `components.schemas.${schemaId}`,
-        kind: "component-schema",
-        baseName: schemaId,
-        name: schemaId,
+        source: "component",
+        role: "schema",
+        canonicalKey: `component:${schemaId}`,
+        displayNameHint: schemaId,
+        identity: {
+          schemaId,
+          schemaTitle: schemaModel.title?.(),
+        },
         schema: await normalizeSchema({
           schemaModel,
           schemaFormat: schemaModel.schemaFormat?.(),

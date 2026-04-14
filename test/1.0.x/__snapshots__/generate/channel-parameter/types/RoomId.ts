@@ -3,6 +3,7 @@
  * Do not edit manually.
  */
 
-export interface CreatePayload {
-  id: string;
-}
+/**
+ * Room identifier
+ */
+export type RoomId = string;

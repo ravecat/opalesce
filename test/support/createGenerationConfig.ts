@@ -1,7 +1,7 @@
 import { asyncapi } from "~/plugins/asyncapi";
 import { typescript } from "~/plugins/typescript";
 import { zod } from "~/plugins/zod";
-import type { PluginInstance, UserConfig } from "~/types";
+import type { IncludeSelector, PluginInstance, UserConfig } from "~/types";
 
 export function createGenerationConfig({
   inputPath,
@@ -25,44 +25,41 @@ export function createSharedPlugins(): PluginInstance[] {
     typescript({
       output: { path: "types" },
       include: [
-        "component-schema",
-        "message-payload",
-        "reply-payload",
-        "channel-parameter",
+        "components.schemas",
+        "operations.messages.payloads",
+        "operations.replies.payloads",
+        "channels.parameters",
       ],
     }),
     zod({
       output: { path: "zod" },
       include: [
-        "component-schema",
-        "message-payload",
-        "reply-payload",
-        "channel-parameter",
+        "components.schemas",
+        "operations.messages.payloads",
+        "operations.replies.payloads",
+        "channels.parameters",
       ],
     }),
   ];
 }
 
 export function createGraphOnlyPlugins(): PluginInstance[] {
+  const include: IncludeSelector[] = [
+    "components.schemas",
+    "operations.messages.payloads",
+    "operations.replies.payloads",
+    "channels.parameters",
+  ];
+
   return [
     asyncapi({ output: false }),
     typescript({
       output: { path: "types" },
-      include: [
-        "component-schema",
-        "message-payload",
-        "reply-payload",
-        "channel-parameter",
-      ],
+      include,
     }),
     zod({
       output: { path: "zod" },
-      include: [
-        "component-schema",
-        "message-payload",
-        "reply-payload",
-        "channel-parameter",
-      ],
+      include,
     }),
   ];
 }

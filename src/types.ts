@@ -1,27 +1,44 @@
 import type { Diagnostic } from "@asyncapi/parser";
 import type { AsyncApiDocument } from "~/core/AsyncApiDocument";
 
-export type EntityKind =
-  | "component-schema"
-  | "message-payload"
-  | "reply-payload"
-  | "channel-parameter"
-  | "message-header";
+export type EntitySource = "component" | "operation" | "channel";
+export type EntityRole = "schema" | "payload" | "header" | "parameter";
+export type EntityScope = "message" | "reply";
 
-export interface AsyncApiEntity {
-  id: string;
-  kind: EntityKind;
-  baseName?: string;
-  name: string;
-  schema: unknown;
-  sourcePath: string;
+export type IncludeSelector =
+  | "components.schemas"
+  | "operations.messages.payloads"
+  | "operations.messages.headers"
+  | "operations.replies.payloads"
+  | "operations.replies.headers"
+  | "channels.parameters";
+
+export interface AsyncApiEntityIdentity {
+  schemaId?: string;
+  schemaTitle?: string;
+  operationId?: string;
+  messageId?: string;
+  messageTitle?: string;
+  channelId?: string;
+  channelTitle?: string;
+  parameterId?: string;
 }
 
 export interface AsyncApiEntitySeed {
   id: string;
-  kind: EntityKind;
-  baseName?: string;
-  name?: string;
+  source: EntitySource;
+  role: EntityRole;
+  scope?: EntityScope;
+  canonicalKey?: string;
+  displayNameHint?: string;
+  namespaceHint?: string;
+  identity?: AsyncApiEntityIdentity;
+  schema: unknown;
+  sourcePath: string;
+}
+
+export interface AsyncApiEntity extends AsyncApiEntitySeed {
+  name: string;
 }
 
 export interface AsyncApiEntityGraph {
