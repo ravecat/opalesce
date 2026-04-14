@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - master
+      - beta
   workflow_dispatch:
     inputs:
       confirm_publish:
