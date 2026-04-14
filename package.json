@@ -23,6 +23,7 @@
     ".": "./dist/index.js",
     "./cli": "./dist/cli.js",
     "./config": "./dist/config.js",
+    "./plugins": "./dist/plugins/index.js",
     "./plugins/asyncapi": "./dist/plugins/asyncapi.js",
     "./plugins/typescript": "./dist/plugins/typescript.js",
     "./plugins/zod": "./dist/plugins/zod.js"
