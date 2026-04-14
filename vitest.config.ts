@@ -5,15 +5,8 @@ import { defineConfig } from "vitest/config";
 const srcDir = fileURLToPath(new URL("./src/", import.meta.url));
 
 export default defineConfig({
-  test: {
-    include: ["test/emitters/**/*.test.ts", "test/runtime/**/*.test.ts"],
-  },
   resolve: {
     alias: [
-      {
-        find: /^~\/(.*)\.js$/,
-        replacement: `${srcDir}$1.ts`,
-      },
       {
         find: /^~\//,
         replacement: srcDir,
@@ -21,4 +14,22 @@ export default defineConfig({
     ],
   },
   plugins: [tsconfigPaths()],
+  test: {
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["test/emitters/**/*.test.ts", "test/runtime/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "smoke",
+          include: ["test/smoke/**/*.test.ts"],
+        },
+      },
+    ],
+  },
 });
