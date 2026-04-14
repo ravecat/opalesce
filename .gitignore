@@ -5,6 +5,7 @@ generated/
 
 .plans/
 tmp/
+.codex
 
 *.tgz
 *.log
