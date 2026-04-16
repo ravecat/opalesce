@@ -15,7 +15,7 @@ async function formatArtifact(artifact: GeneratedArtifact): Promise<string> {
 
 export async function matchArtifacts(
   artifacts: GeneratedArtifact[] | undefined,
-  prefix?: string,
+  snapshotSegments: string[] = [],
 ): Promise<void> {
   if (!artifacts?.length) {
     return;
@@ -28,7 +28,7 @@ export async function matchArtifacts(
   for (const artifact of ordered) {
     const snapshotPath = path.join(
       "__snapshots__",
-      ...(prefix ? [prefix] : []),
+      ...snapshotSegments,
       artifact.filePath,
     );
     await expect(await formatArtifact(artifact)).toMatchFileSnapshot(
