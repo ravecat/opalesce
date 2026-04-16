@@ -46,19 +46,25 @@ function createChannelParameterPlugins(): PluginInstance[] {
 
 const cases = [
   {
-    name: "basic-smoke",
+    testName: "generates baseline artifacts for the smoke fixture",
+    behavior: "smoke",
+    caseId: "basic",
     input: "./test/fixtures/smoke/basic.asyncapi.yaml",
     createPlugins: createSharedPlugins,
     expectTotalMin: 8,
   },
   {
-    name: "reply-payload",
+    testName: "generates reply payload artifacts from operation replies",
+    behavior: "operations-replies-payloads",
+    caseId: "reply-payload",
     input: "./test/fixtures/regressions/reply-payload.asyncapi.yaml",
     createPlugins: createReplyPayloadPlugins,
     expectTotalMin: 4,
   },
   {
-    name: "channel-parameter",
+    testName: "generates channel parameter artifacts from channel addresses",
+    behavior: "channels-parameters",
+    caseId: "channel-parameter",
     input: "./test/fixtures/regressions/channel-parameter.asyncapi.yaml",
     createPlugins: createChannelParameterPlugins,
     expectTotalMin: 2,
@@ -66,7 +72,7 @@ const cases = [
 ];
 
 describe("generate 1.0.x - AsyncAPI 3.0", () => {
-  test.each(cases)("matches generated files for $name", async (scenario) => {
+  test.each(cases)("$testName", async (scenario) => {
     const workspace = await mkdtemp(join(tmpdir(), "asyncapi-codegen-"));
     const outDir = join(workspace, "generated");
 
@@ -91,7 +97,7 @@ describe("generate 1.0.x - AsyncAPI 3.0", () => {
       );
       await matchGeneratedFiles({
         rootDir: outDir,
-        snapshotPrefix: ["generate", scenario.name],
+        snapshotSegments: ["generate", scenario.behavior, scenario.caseId],
       });
     } finally {
       await rm(workspace, { recursive: true, force: true });

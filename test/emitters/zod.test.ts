@@ -3,31 +3,35 @@ import { emitZodArtifacts } from "~/emitters/zod";
 import { matchArtifacts } from "../support/matchArtifacts";
 
 describe("emitZodArtifacts", () => {
-  test("matches snapshots for representative entities", async () => {
-    const artifacts = emitZodArtifacts({
-      graph: {
-        entities: [
-          {
-            id: "operations.userCreated.payload",
-            source: "operation",
-            role: "payload",
-            scope: "message",
-            name: "UserCreatedPayload",
-            schema: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
+  test(
+    "emits deterministic Zod artifacts for representative payload entities",
+    async () => {
+      const artifacts = emitZodArtifacts({
+        graph: {
+          entities: [
+            {
+              id: "operations.userCreated.payload",
+              source: "operation",
+              role: "payload",
+              scope: "message",
+              name: "UserCreatedPayload",
+              schema: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                },
+                required: ["id"],
               },
-              required: ["id"],
+              sourcePath:
+                "#/operations/userCreated/messages/userCreated/payload",
             },
-            sourcePath: "#/operations/userCreated/messages/userCreated/payload",
-          },
-        ],
-        byId: new Map(),
-      },
-      outputPath: "zod",
-    });
+          ],
+          byId: new Map(),
+        },
+        outputPath: "zod",
+      });
 
-    await matchArtifacts(artifacts, "zod.test.ts");
-  });
+      await matchArtifacts(artifacts, ["zod"]);
+    },
+  );
 });

@@ -29,10 +29,10 @@ function collectFiles(rootDir: string): string[] {
 
 export async function matchGeneratedFiles({
   rootDir,
-  snapshotPrefix,
+  snapshotSegments,
 }: {
   rootDir: string;
-  snapshotPrefix: string[];
+  snapshotSegments: string[];
 }): Promise<void> {
   for (const absolutePath of collectFiles(rootDir)) {
     const relativePath = path
@@ -40,7 +40,7 @@ export async function matchGeneratedFiles({
       .replaceAll("\\", "/");
     const snapshotPath = path.join(
       "__snapshots__",
-      ...snapshotPrefix,
+      ...snapshotSegments,
       relativePath,
     );
     const code = readFileSync(absolutePath, "utf8");
