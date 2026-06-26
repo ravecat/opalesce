@@ -10,38 +10,34 @@ interface BackendPluginOptions {
   include?: IncludeSelector[];
 }
 
-export const zod = definePlugin(
-  (options: BackendPluginOptions = {}): PluginInstance => {
-    const include = normalizeInclude(options.include);
+export const zod = definePlugin((options: BackendPluginOptions = {}): PluginInstance => {
+  const include = normalizeInclude(options.include);
 
-    return {
-      name: "zod",
-      pre: ["asyncapi"],
-      options: {
-        output: {
-          path: options.output?.path ?? "zod",
-        },
-        include: options.include ?? [],
+  return {
+    name: "zod",
+    pre: ["asyncapi"],
+    options: {
+      output: {
+        path: options.output?.path ?? "zod",
       },
-      async install() {
-        const graph = await this.getEntityGraph?.();
+      include: options.include ?? [],
+    },
+    async install() {
+      const graph = await this.getEntityGraph?.();
 
-        if (!graph) {
-          throw new Error(
-            "zod requires asyncapi to initialize the entity graph.",
-          );
-        }
+      if (!graph) {
+        throw new Error("zod requires asyncapi to initialize the entity graph.");
+      }
 
-        const artifacts = emitZodArtifacts({
-          graph,
-          outputPath: options.output?.path ?? "zod",
-          include,
-        });
+      const artifacts = emitZodArtifacts({
+        graph,
+        outputPath: options.output?.path ?? "zod",
+        include,
+      });
 
-        for (const artifact of artifacts) {
-          this.addArtifact(artifact);
-        }
-      },
-    };
-  },
-);
+      for (const artifact of artifacts) {
+        this.addArtifact(artifact);
+      }
+    },
+  };
+});

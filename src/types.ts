@@ -118,19 +118,12 @@ export interface PluginInstance<
   options: TOptions;
   pre?: string[];
   post?: string[];
-  resolveName?(
-    this: PluginContext,
-    name: string,
-    type?: "file" | "type",
-  ): string | undefined;
+  resolveName?(this: PluginContext, name: string, type?: "file" | "type"): string | undefined;
   resolvePath?(
     this: PluginContext,
     baseName: string,
     mode?: "single" | "split",
   ): string | undefined;
-  inject?(
-    this: PluginContext,
-    context: PluginContext,
-  ): Record<string, unknown> | void;
+  inject?(this: PluginContext, context: PluginContext): Record<string, unknown> | void;
   install(this: PluginContext, context: PluginContext): Promise<void> | void;
 }

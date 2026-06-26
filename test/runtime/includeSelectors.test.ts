@@ -7,9 +7,10 @@ describe("normalizeInclude", () => {
   });
 
   test("accepts AsyncAPI selectors", () => {
-    expect(
-      normalizeInclude(["components.schemas", "channels.parameters"]),
-    ).toEqual(["components.schemas", "channels.parameters"]);
+    expect(normalizeInclude(["components.schemas", "channels.parameters"])).toEqual([
+      "components.schemas",
+      "channels.parameters",
+    ]);
   });
 
   test("rejects legacy kind literals", () => {

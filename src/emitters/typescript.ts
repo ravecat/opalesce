@@ -1,10 +1,6 @@
 import { compile, type JSONSchema } from "json-schema-to-typescript";
 import { matchesInclude } from "~/core/include";
-import type {
-  AsyncApiEntityGraph,
-  GeneratedArtifact,
-  IncludeSelector,
-} from "~/types";
+import type { AsyncApiEntityGraph, GeneratedArtifact, IncludeSelector } from "~/types";
 
 const BANNER = `/**
  * Generated from AsyncAPI spec.
@@ -19,10 +15,7 @@ function applyBinaryTsType(value: unknown): unknown {
   if (value && typeof value === "object") {
     const node = value as Record<string, unknown>;
     const transformed = Object.fromEntries(
-      Object.entries(node).map(([key, nested]) => [
-        key,
-        applyBinaryTsType(nested),
-      ]),
+      Object.entries(node).map(([key, nested]) => [key, applyBinaryTsType(nested)]),
     );
 
     if (transformed.type === "string" && transformed.format === "binary") {
@@ -57,15 +50,11 @@ export async function emitTypescriptArtifacts({
       .map(async (entity) => ({
         kind: "types" as const,
         filePath: `${outputPath}/${entity.name}.ts`,
-        code: await compile(
-          applyBinaryTsType(entity.schema) as JSONSchema,
-          entity.name,
-          {
-            additionalProperties: false,
-            bannerComment: BANNER,
-            format: false,
-          },
-        ),
+        code: await compile(applyBinaryTsType(entity.schema) as JSONSchema, entity.name, {
+          additionalProperties: false,
+          bannerComment: BANNER,
+          format: false,
+        }),
         export: {
           name: entity.name,
           kind: "type" as const,

@@ -29,10 +29,7 @@ export class PluginManager {
       await plugin.install.call(pluginContext, pluginContext);
 
       if (typeof plugin.inject === "function") {
-        Object.assign(
-          injections,
-          plugin.inject.call(pluginContext, pluginContext) ?? {},
-        );
+        Object.assign(injections, plugin.inject.call(pluginContext, pluginContext) ?? {});
       }
     }
 
@@ -65,9 +62,7 @@ export class PluginManager {
 
       if (readyIndex === -1) {
         throw new Error(
-          `Cannot resolve plugin order for: ${pending
-            .map((plugin) => plugin.name)
-            .join(", ")}`,
+          `Cannot resolve plugin order for: ${pending.map((plugin) => plugin.name).join(", ")}`,
         );
       }
 
@@ -119,9 +114,7 @@ export class PluginManager {
         return plugin.resolveName?.call(pluginContext, name, type) ?? name;
       },
       resolvePath(baseName: string, mode = "split") {
-        return (
-          plugin.resolvePath?.call(pluginContext, baseName, mode) ?? baseName
-        );
+        return plugin.resolvePath?.call(pluginContext, baseName, mode) ?? baseName;
       },
       ...injections,
     } as PluginContext;

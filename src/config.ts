@@ -4,11 +4,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { UserConfig } from "~/types";
 
-const CONFIG_FILE_NAMES = [
-  "asyncapi.config.mjs",
-  "asyncapi.config.js",
-  "asyncapi.config.cjs",
-];
+const CONFIG_FILE_NAMES = ["asyncapi.config.mjs", "asyncapi.config.js", "asyncapi.config.cjs"];
 
 export function defineConfig<T extends UserConfig>(config: T): T {
   return config;
@@ -21,19 +17,11 @@ function assertConfigShape(value: unknown): asserts value is UserConfig {
 
   const config = value as UserConfig;
 
-  if (
-    !config.input ||
-    typeof config.input.path !== "string" ||
-    !config.input.path
-  ) {
+  if (!config.input || typeof config.input.path !== "string" || !config.input.path) {
     throw new Error("Config must define input.path.");
   }
 
-  if (
-    !config.output ||
-    typeof config.output.path !== "string" ||
-    !config.output.path
-  ) {
+  if (!config.output || typeof config.output.path !== "string" || !config.output.path) {
     throw new Error("Config must define output.path.");
   }
 
@@ -64,9 +52,7 @@ async function resolveConfigPath({
     }
   }
 
-  throw new Error(
-    "Config not found. Create asyncapi.config.mjs or pass one with --config.",
-  );
+  throw new Error("Config not found. Create asyncapi.config.mjs or pass one with --config.");
 }
 
 export async function loadConfig({

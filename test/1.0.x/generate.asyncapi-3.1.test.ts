@@ -4,14 +4,10 @@ import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { runGeneration } from "~/runtime/runGeneration";
 import { writeArtifacts } from "~/runtime/writeArtifacts";
-import {
-  createGenerationConfig,
-  createGraphOnlyPlugins,
-} from "../support/createGenerationConfig";
+import { createGenerationConfig, createGraphOnlyPlugins } from "../support/createGenerationConfig";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
-const GENERATED_GITATTRIBUTES =
-  "* linguist-generated=true\n**/* linguist-generated=true\n";
+const GENERATED_GITATTRIBUTES = "* linguist-generated=true\n**/* linguist-generated=true\n";
 
 describe("generate 1.0.x - AsyncAPI 3.1", () => {
   test("generates artifacts for the anonymized realtime room fixture", async () => {
@@ -36,9 +32,7 @@ describe("generate 1.0.x - AsyncAPI 3.1", () => {
 
       expect(result.diagnostics).toEqual([]);
       expect(result.artifacts).toHaveLength(40);
-      const artifactPaths = result.artifacts.map(
-        (artifact) => artifact.filePath,
-      );
+      const artifactPaths = result.artifacts.map((artifact) => artifact.filePath);
       expect(new Set(artifactPaths).size).toBe(result.artifacts.length);
       expect(artifactPaths).toEqual(
         expect.arrayContaining([
@@ -64,10 +58,7 @@ describe("generate 1.0.x - AsyncAPI 3.1", () => {
         ]),
       );
 
-      const gitAttributes = await readFile(
-        join(outDir, ".gitattributes"),
-        "utf8",
-      );
+      const gitAttributes = await readFile(join(outDir, ".gitattributes"), "utf8");
       expect(gitAttributes).toBe(GENERATED_GITATTRIBUTES);
 
       const rootIndex = await readFile(join(outDir, "index.ts"), "utf8");
@@ -81,10 +72,7 @@ describe("generate 1.0.x - AsyncAPI 3.1", () => {
       );
       expect(providerReply).toContain('"invalid_credentials"');
 
-      const turnSchema = await readFile(
-        join(outDir, "zod/TurnSchema.ts"),
-        "utf8",
-      );
+      const turnSchema = await readFile(join(outDir, "zod/TurnSchema.ts"), "utf8");
       expect(turnSchema).toContain("deadline_at_ms");
       expect(turnSchema).toContain("winner_id");
     } finally {

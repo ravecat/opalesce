@@ -13,11 +13,7 @@ describe("public API", () => {
   });
 
   test("plugins entrypoint exposes built-in plugins", () => {
-    expect(Object.keys(plugins).sort()).toEqual([
-      "asyncapi",
-      "typescript",
-      "zod",
-    ]);
+    expect(Object.keys(plugins).sort()).toEqual(["asyncapi", "typescript", "zod"]);
   });
 
   test("package exports expose the grouped plugins barrel", async () => {

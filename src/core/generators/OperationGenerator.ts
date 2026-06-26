@@ -13,21 +13,14 @@ function getMessageVariant(operationId: string, messageId: string): string {
   const operationName = pascalCase(operationId);
   const messageName = pascalCase(messageId);
 
-  if (
-    messageName.startsWith(operationName) &&
-    messageName.length > operationName.length
-  ) {
+  if (messageName.startsWith(operationName) && messageName.length > operationName.length) {
     return messageName.slice(operationName.length);
   }
 
   return messageName;
 }
 
-function getPayloadBaseName(
-  operationId: string,
-  messageId: string,
-  totalMessages: number,
-): string {
+function getPayloadBaseName(operationId: string, messageId: string, totalMessages: number): string {
   if (totalMessages === 1) {
     return `${operationId}Payload`;
   }
@@ -35,11 +28,7 @@ function getPayloadBaseName(
   return `${operationId}${getMessageVariant(operationId, messageId)}Payload`;
 }
 
-function getReplyBaseName(
-  operationId: string,
-  messageId: string,
-  totalMessages: number,
-): string {
+function getReplyBaseName(operationId: string, messageId: string, totalMessages: number): string {
   if (totalMessages === 1) {
     return `${operationId}ReplyPayload`;
   }
@@ -85,13 +74,10 @@ export class OperationGenerator {
       this.asyncapi.getOperations() as OperationInterface[]
     ).entries()) {
       const operationId = operation.id?.() ?? `operation${index + 1}`;
-      const messages = [
-        ...(operation.messages?.() ?? []),
-      ] as MessageInterface[];
+      const messages = [...(operation.messages?.() ?? [])] as MessageInterface[];
 
       for (const [messageIndex, message] of messages.entries()) {
-        const messageId =
-          message.id?.() ?? `${operationId}Message${messageIndex + 1}`;
+        const messageId = message.id?.() ?? `${operationId}Message${messageIndex + 1}`;
         const payload = message.payload?.();
         const headers = message.headers?.();
 
@@ -109,11 +95,7 @@ export class OperationGenerator {
               scope: "message",
               schemaId,
             }),
-            displayNameHint: getPayloadBaseName(
-              operationId,
-              messageId,
-              messages.length,
-            ),
+            displayNameHint: getPayloadBaseName(operationId, messageId, messages.length),
             namespaceHint: operationId,
             identity: {
               schemaId,
@@ -143,12 +125,7 @@ export class OperationGenerator {
               role: "header",
               scope: "message",
             }),
-            displayNameHint: getHeadersBaseName(
-              operationId,
-              messageId,
-              messages.length,
-              "message",
-            ),
+            displayNameHint: getHeadersBaseName(operationId, messageId, messages.length, "message"),
             namespaceHint: operationId,
             identity: {
               operationId,
@@ -165,13 +142,10 @@ export class OperationGenerator {
       }
 
       const reply = operation.reply?.();
-      const replyMessages = reply
-        ? ([...(reply.messages?.() ?? [])] as MessageInterface[])
-        : [];
+      const replyMessages = reply ? ([...(reply.messages?.() ?? [])] as MessageInterface[]) : [];
 
       for (const [replyIndex, message] of replyMessages.entries()) {
-        const messageId =
-          message.id?.() ?? `${operationId}Reply${replyIndex + 1}`;
+        const messageId = message.id?.() ?? `${operationId}Reply${replyIndex + 1}`;
         const payload = message.payload?.();
         const headers = message.headers?.();
 
@@ -189,11 +163,7 @@ export class OperationGenerator {
               scope: "reply",
               schemaId,
             }),
-            displayNameHint: getReplyBaseName(
-              operationId,
-              messageId,
-              replyMessages.length,
-            ),
+            displayNameHint: getReplyBaseName(operationId, messageId, replyMessages.length),
             namespaceHint: operationId,
             identity: {
               schemaId,
@@ -249,13 +219,10 @@ export class OperationGenerator {
       this.asyncapi.getChannels() as ChannelInterface[]
     ).entries()) {
       const channelId = channel.id?.() ?? `channel${channelIndex + 1}`;
-      const parameters = [
-        ...(channel.parameters?.() ?? []),
-      ] as ChannelParameterInterface[];
+      const parameters = [...(channel.parameters?.() ?? [])] as ChannelParameterInterface[];
 
       for (const [parameterIndex, parameter] of parameters.entries()) {
-        const parameterId =
-          parameter.id?.() ?? `parameter${parameterIndex + 1}`;
+        const parameterId = parameter.id?.() ?? `parameter${parameterIndex + 1}`;
         const schema = parameter.schema?.();
 
         if (!schema) {

@@ -4,8 +4,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { writeArtifacts } from "~/runtime/writeArtifacts";
 
-const GENERATED_GITATTRIBUTES =
-  "* linguist-generated=true\n**/* linguist-generated=true\n";
+const GENERATED_GITATTRIBUTES = "* linguist-generated=true\n**/* linguist-generated=true\n";
 
 describe("writeArtifacts", () => {
   test("writes files, barrel exports, and repository metadata deterministically", async () => {
@@ -31,17 +30,15 @@ describe("writeArtifacts", () => {
       await expect(
         readFile(join(outDir, "types/UserCreatedPayload.ts"), "utf8"),
       ).resolves.toContain("UserCreatedPayload");
-      await expect(
-        readFile(join(outDir, "types/index.ts"), "utf8"),
-      ).resolves.toContain(
+      await expect(readFile(join(outDir, "types/index.ts"), "utf8")).resolves.toContain(
         'export type { UserCreatedPayload } from "./UserCreatedPayload.js";',
       );
-      await expect(
-        readFile(join(outDir, "index.ts"), "utf8"),
-      ).resolves.toContain('export * from "./types/index.js";');
-      await expect(
-        readFile(join(outDir, ".gitattributes"), "utf8"),
-      ).resolves.toBe(GENERATED_GITATTRIBUTES);
+      await expect(readFile(join(outDir, "index.ts"), "utf8")).resolves.toContain(
+        'export * from "./types/index.js";',
+      );
+      await expect(readFile(join(outDir, ".gitattributes"), "utf8")).resolves.toBe(
+        GENERATED_GITATTRIBUTES,
+      );
     } finally {
       await rm(outDir, { recursive: true, force: true });
     }
@@ -57,9 +54,7 @@ describe("writeArtifacts", () => {
         artifacts: [],
       });
 
-      await expect(
-        readFile(join(outDir, ".gitattributes"), "utf8"),
-      ).rejects.toThrow();
+      await expect(readFile(join(outDir, ".gitattributes"), "utf8")).rejects.toThrow();
     } finally {
       await rm(outDir, { recursive: true, force: true });
     }

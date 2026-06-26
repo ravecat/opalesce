@@ -35,18 +35,10 @@ export async function matchGeneratedFiles({
   snapshotSegments: string[];
 }): Promise<void> {
   for (const absolutePath of collectFiles(rootDir)) {
-    const relativePath = path
-      .relative(rootDir, absolutePath)
-      .replaceAll("\\", "/");
-    const snapshotPath = path.join(
-      "__snapshots__",
-      ...snapshotSegments,
-      relativePath,
-    );
+    const relativePath = path.relative(rootDir, absolutePath).replaceAll("\\", "/");
+    const snapshotPath = path.join("__snapshots__", ...snapshotSegments, relativePath);
     const code = readFileSync(absolutePath, "utf8");
 
-    await expect(await formatFile(relativePath, code)).toMatchFileSnapshot(
-      snapshotPath,
-    );
+    await expect(await formatFile(relativePath, code)).toMatchFileSnapshot(snapshotPath);
   }
 }

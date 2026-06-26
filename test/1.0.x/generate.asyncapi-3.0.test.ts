@@ -8,10 +8,7 @@ import { zod } from "~/plugins/zod";
 import { runGeneration } from "~/runtime/runGeneration";
 import { writeArtifacts } from "~/runtime/writeArtifacts";
 import type { PluginInstance } from "~/types";
-import {
-  createGenerationConfig,
-  createSharedPlugins,
-} from "../support/createGenerationConfig";
+import { createGenerationConfig, createSharedPlugins } from "../support/createGenerationConfig";
 import { matchGeneratedFiles } from "../support/matchGeneratedFiles";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
@@ -92,9 +89,7 @@ describe("generate 1.0.x - AsyncAPI 3.0", () => {
         artifacts: result.artifacts,
       });
 
-      expect(result.artifacts.length).toBeGreaterThanOrEqual(
-        scenario.expectTotalMin,
-      );
+      expect(result.artifacts.length).toBeGreaterThanOrEqual(scenario.expectTotalMin);
       await matchGeneratedFiles({
         rootDir: outDir,
         snapshotSegments: ["generate", scenario.behavior, scenario.caseId],
@@ -139,20 +134,14 @@ components:
         artifacts: result.artifacts,
       });
 
+      expect(result.artifacts.some((artifact) => artifact.filePath === "types/UserId.ts")).toBe(
+        true,
+      );
+      expect(result.artifacts.some((artifact) => artifact.filePath === "zod/UserIdSchema.ts")).toBe(
+        true,
+      );
       expect(
-        result.artifacts.some(
-          (artifact) => artifact.filePath === "types/UserId.ts",
-        ),
-      ).toBe(true);
-      expect(
-        result.artifacts.some(
-          (artifact) => artifact.filePath === "zod/UserIdSchema.ts",
-        ),
-      ).toBe(true);
-      expect(
-        result.artifacts.some(
-          (artifact) => artifact.filePath === "types/JoinRoomPayload.ts",
-        ),
+        result.artifacts.some((artifact) => artifact.filePath === "types/JoinRoomPayload.ts"),
       ).toBe(false);
     } finally {
       await rm(workspace, { recursive: true, force: true });

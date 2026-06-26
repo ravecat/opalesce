@@ -21,9 +21,7 @@ export function camelCase(value: string): string {
   return normalized[0].toLowerCase() + normalized.slice(1);
 }
 
-export function assignEntityNames(
-  entities: AsyncApiEntitySeed[],
-): AsyncApiEntity[] {
+export function assignEntityNames(entities: AsyncApiEntitySeed[]): AsyncApiEntity[] {
   const initial = entities.map((entity) => ({
     ...entity,
     name: deriveEntityName(entity),
@@ -35,9 +33,7 @@ export function assignEntityNames(
       return entity;
     }
 
-    const namespaced = pascalCase(
-      [entity.namespaceHint, entity.name].filter(Boolean).join(" "),
-    );
+    const namespaced = pascalCase([entity.namespaceHint, entity.name].filter(Boolean).join(" "));
 
     return {
       ...entity,
@@ -102,9 +98,7 @@ function deriveEntityName(entity: AsyncApiEntitySeed): string {
 
   if (entity.source === "channel" && entity.role === "parameter") {
     return (
-      pascalCase(
-        entity.identity?.parameterId ?? entity.displayNameHint ?? entity.id,
-      ) || "Entity"
+      pascalCase(entity.identity?.parameterId ?? entity.displayNameHint ?? entity.id) || "Entity"
     );
   }
 

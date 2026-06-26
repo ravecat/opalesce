@@ -39,9 +39,7 @@ describe("runGeneration", () => {
 
       expect(result.artifacts).toHaveLength(1);
       expect(result.artifacts[0]?.filePath).toBe("types/UserCreatedPayload.ts");
-      expect(existsSync(join(outDir, "types/UserCreatedPayload.ts"))).toBe(
-        false,
-      );
+      expect(existsSync(join(outDir, "types/UserCreatedPayload.ts"))).toBe(false);
     } finally {
       await rm(outDir, { recursive: true, force: true });
     }

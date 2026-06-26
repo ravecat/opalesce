@@ -3,9 +3,7 @@ import { runGeneration } from "~/runtime/runGeneration";
 import { writeArtifacts } from "~/runtime/writeArtifacts";
 import type { GenerateOptions, GenerateResult } from "~/types";
 
-export async function generate(
-  options: GenerateOptions = {},
-): Promise<GenerateResult> {
+export async function generate(options: GenerateOptions = {}): Promise<GenerateResult> {
   const cwd = options.cwd ?? process.cwd();
   const config = await loadConfig({
     cwd,

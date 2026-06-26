@@ -3,8 +3,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import prettier from "prettier";
 import type { GeneratedArtifact } from "~/types";
 
-const GENERATED_GITATTRIBUTES =
-  "* linguist-generated=true\n**/* linguist-generated=true\n";
+const GENERATED_GITATTRIBUTES = "* linguist-generated=true\n**/* linguist-generated=true\n";
 
 function toPosixPath(value: string): string {
   return value.replaceAll("\\", "/");
@@ -23,9 +22,7 @@ function assertSafeOutputRoot(root: string, cwd: string): void {
   }
 }
 
-function createBarrelFiles(
-  artifacts: GeneratedArtifact[],
-): Map<string, string> {
+function createBarrelFiles(artifacts: GeneratedArtifact[]): Map<string, string> {
   const groups = new Map<
     string,
     Array<{
@@ -50,15 +47,13 @@ function createBarrelFiles(
 
   const generated = new Map();
 
-  for (const [directory, items] of [...groups.entries()].sort(
-    ([left], [right]) => left.localeCompare(right),
+  for (const [directory, items] of [...groups.entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
   )) {
     const lines = items
       .sort((left, right) => left.filePath.localeCompare(right.filePath))
       .map((item) => {
-        const fileName = item.filePath
-          .slice(directory.length + 1)
-          .replace(/\.ts$/, ".js");
+        const fileName = item.filePath.slice(directory.length + 1).replace(/\.ts$/, ".js");
         const path = `./${toPosixPath(fileName)}`;
         return item.export.kind === "type"
           ? `export type { ${item.export.name} } from "${path}";`
@@ -70,10 +65,7 @@ function createBarrelFiles(
 
   const rootLines = [...groups.keys()]
     .sort((left, right) => left.localeCompare(right))
-    .map(
-      (directory) =>
-        `export * from "./${toPosixPath(join(directory, "index.js"))}";`,
-    );
+    .map((directory) => `export * from "./${toPosixPath(join(directory, "index.js"))}";`);
 
   if (rootLines.length > 0) {
     generated.set("index.ts", `${rootLines.join("\n")}\n`);
@@ -108,8 +100,8 @@ export async function writeArtifacts({
     files.set(".gitattributes", GENERATED_GITATTRIBUTES);
   }
 
-  for (const [relativePath, code] of [...files.entries()].sort(
-    ([left], [right]) => left.localeCompare(right),
+  for (const [relativePath, code] of [...files.entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
   )) {
     const absolutePath = resolve(resolvedOutDir, relativePath);
     mkdirSync(dirname(absolutePath), { recursive: true });

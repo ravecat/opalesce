@@ -1,11 +1,7 @@
 import { jsonSchemaToZod } from "json-schema-to-zod";
 import { camelCase } from "~/core/naming";
 import { matchesInclude } from "~/core/include";
-import type {
-  AsyncApiEntityGraph,
-  GeneratedArtifact,
-  IncludeSelector,
-} from "~/types";
+import type { AsyncApiEntityGraph, GeneratedArtifact, IncludeSelector } from "~/types";
 
 const BANNER = `/**
  * Generated from AsyncAPI spec.
@@ -20,10 +16,7 @@ function normalizeZodSchema(value: unknown): unknown {
   if (value && typeof value === "object") {
     const node = value as Record<string, unknown>;
     const transformed = Object.fromEntries(
-      Object.entries(node).map(([key, nested]) => [
-        key,
-        normalizeZodSchema(nested),
-      ]),
+      Object.entries(node).map(([key, nested]) => [key, normalizeZodSchema(nested)]),
     );
 
     if (Array.isArray(transformed.oneOf) && transformed.anyOf === undefined) {
@@ -40,9 +33,7 @@ function normalizeZodSchema(value: unknown): unknown {
   return value;
 }
 
-function withBinaryArrayBufferZodParser(
-  node: Record<string, unknown>,
-): string | undefined {
+function withBinaryArrayBufferZodParser(node: Record<string, unknown>): string | undefined {
   if (node.type === "string" && node.format === "binary") {
     return "z.instanceof(ArrayBuffer)";
   }
@@ -51,12 +42,9 @@ function withBinaryArrayBufferZodParser(
 }
 
 function emitZodExpression(schema: unknown): string {
-  return jsonSchemaToZod(
-    normalizeZodSchema(schema) as Record<string, unknown>,
-    {
-      parserOverride: withBinaryArrayBufferZodParser,
-    },
-  )
+  return jsonSchemaToZod(normalizeZodSchema(schema) as Record<string, unknown>, {
+    parserOverride: withBinaryArrayBufferZodParser,
+  })
     .replace(/z\.record\((?!z\.string\(\),\s)/g, "z.record(z.string(), ")
     .replaceAll("z.any()", "z.unknown()")
     .trim()
@@ -74,9 +62,7 @@ export function emitZodArtifacts({
 }): GeneratedArtifact[] {
   return graph.entities
     .filter((entity) =>
-      Array.isArray(include)
-        ? include.some((selector) => matchesInclude(entity, selector))
-        : true,
+      Array.isArray(include) ? include.some((selector) => matchesInclude(entity, selector)) : true,
     )
     .map((entity) => {
       const exportName = `${camelCase(entity.name)}Schema`;

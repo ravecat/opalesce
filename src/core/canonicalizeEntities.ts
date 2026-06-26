@@ -1,8 +1,4 @@
-import type {
-  AsyncApiEntityIdentity,
-  AsyncApiEntitySeed,
-  EntitySource,
-} from "~/types";
+import type { AsyncApiEntityIdentity, AsyncApiEntitySeed, EntitySource } from "~/types";
 
 const SOURCE_PRIORITY: Record<EntitySource, number> = {
   component: 0,
@@ -10,9 +6,7 @@ const SOURCE_PRIORITY: Record<EntitySource, number> = {
   channel: 2,
 };
 
-export function canonicalizeEntities(
-  entities: AsyncApiEntitySeed[],
-): AsyncApiEntitySeed[] {
+export function canonicalizeEntities(entities: AsyncApiEntitySeed[]): AsyncApiEntitySeed[] {
   const groups = new Map<string, AsyncApiEntitySeed[]>();
 
   for (const entity of entities) {
@@ -22,8 +16,7 @@ export function canonicalizeEntities(
 
   return [...groups.values()].map((group) => {
     const [canonical] = [...group].sort(
-      (left, right) =>
-        SOURCE_PRIORITY[left.source] - SOURCE_PRIORITY[right.source],
+      (left, right) => SOURCE_PRIORITY[left.source] - SOURCE_PRIORITY[right.source],
     );
 
     return {

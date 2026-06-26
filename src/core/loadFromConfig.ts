@@ -19,9 +19,7 @@ export async function loadFromConfig({
   );
 
   if (!document || fatalDiagnostics.length > 0) {
-    throw new Error(
-      `AsyncAPI parse failed with ${fatalDiagnostics.length} error(s).`,
-    );
+    throw new Error(`AsyncAPI parse failed with ${fatalDiagnostics.length} error(s).`);
   }
 
   return new AsyncApiDocument(document, { diagnostics });

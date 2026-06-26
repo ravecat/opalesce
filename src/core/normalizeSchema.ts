@@ -1,7 +1,4 @@
-const PARSER_PRIVATE_KEYS = new Set([
-  "x-parser-schema-id",
-  "x-parser-unique-object-id",
-]);
+const PARSER_PRIVATE_KEYS = new Set(["x-parser-schema-id", "x-parser-unique-object-id"]);
 
 function stripParserMetadata(value: unknown): unknown {
   if (Array.isArray(value)) {
@@ -11,10 +8,7 @@ function stripParserMetadata(value: unknown): unknown {
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value)
-        .filter(
-          ([key, nested]) =>
-            !PARSER_PRIVATE_KEYS.has(key) && nested !== undefined,
-        )
+        .filter(([key, nested]) => !PARSER_PRIVATE_KEYS.has(key) && nested !== undefined)
         .map(([key, nested]) => [key, stripParserMetadata(nested)]),
     );
   }
@@ -33,9 +27,7 @@ export async function normalizeSchema({
 }): Promise<unknown> {
   const resolvedSchemaFormat =
     schemaFormat ??
-    (typeof schemaModel.schemaFormat === "function"
-      ? schemaModel.schemaFormat()
-      : undefined);
+    (typeof schemaModel.schemaFormat === "function" ? schemaModel.schemaFormat() : undefined);
 
   if (
     resolvedSchemaFormat &&

@@ -30,9 +30,7 @@ describe("generate", () => {
       expect(result.total).toBe(0);
       expect(result.artifacts).toEqual([]);
       expect(result.outDir).toBe(outDir);
-      await expect(
-        readFile(join(outDir, "index.ts"), "utf8"),
-      ).rejects.toThrow();
+      await expect(readFile(join(outDir, "index.ts"), "utf8")).rejects.toThrow();
     } finally {
       await rm(workspace, { recursive: true, force: true });
     }

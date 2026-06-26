@@ -1,8 +1,6 @@
 import type { AsyncApiEntity, AsyncApiEntityGraph } from "~/types";
 
-export function createEntityGraph(
-  entities: AsyncApiEntity[],
-): AsyncApiEntityGraph {
+export function createEntityGraph(entities: AsyncApiEntity[]): AsyncApiEntityGraph {
   const byId = new Map<string, AsyncApiEntity>();
 
   for (const entity of entities) {

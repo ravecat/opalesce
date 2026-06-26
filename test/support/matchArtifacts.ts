@@ -21,18 +21,10 @@ export async function matchArtifacts(
     return;
   }
 
-  const ordered = [...artifacts].sort((left, right) =>
-    left.filePath.localeCompare(right.filePath),
-  );
+  const ordered = [...artifacts].sort((left, right) => left.filePath.localeCompare(right.filePath));
 
   for (const artifact of ordered) {
-    const snapshotPath = path.join(
-      "__snapshots__",
-      ...snapshotSegments,
-      artifact.filePath,
-    );
-    await expect(await formatArtifact(artifact)).toMatchFileSnapshot(
-      snapshotPath,
-    );
+    const snapshotPath = path.join("__snapshots__", ...snapshotSegments, artifact.filePath);
+    await expect(await formatArtifact(artifact)).toMatchFileSnapshot(snapshotPath);
   }
 }

@@ -38,15 +38,12 @@ function printDiagnostics(diagnostics: unknown[]): void {
     };
 
     const path =
-      Array.isArray(value.path) && value.path.length > 0
-        ? value.path.join(".")
-        : "<root>";
+      Array.isArray(value.path) && value.path.length > 0 ? value.path.join(".") : "<root>";
     const severity =
       typeof value.severity === "string" || typeof value.severity === "number"
         ? String(value.severity)
         : "info";
-    const message =
-      typeof value.message === "string" ? value.message : String(diagnostic);
+    const message = typeof value.message === "string" ? value.message : String(diagnostic);
 
     console.log(`[asyncapi:${severity}] ${path}: ${message}`);
   }

@@ -1,9 +1,5 @@
 import { PluginManager } from "~/runtime/PluginManager";
-import type {
-  GenerationContext,
-  RunGenerationOptions,
-  RunGenerationResult,
-} from "~/types";
+import type { GenerationContext, RunGenerationOptions, RunGenerationResult } from "~/types";
 
 export async function runGeneration({
   cwd = process.cwd(),
