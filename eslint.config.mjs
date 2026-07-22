@@ -5,7 +5,8 @@ export default [
   {
     ignores: [
       "node_modules/**",
-      "dist/**",
+      "**/dist/**",
+      ".nx/**",
       "coverage/**",
       "tmp/**",
       "src/**/__snapshots__/**",
@@ -15,7 +16,7 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["src/**/*.ts", "test/**/*.ts", "test/**/*.mjs"],
+    files: ["**/src/**/*.ts", "**/test/**/*.ts", "**/test/**/*.mjs"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",

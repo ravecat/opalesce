@@ -26,7 +26,6 @@
         {
           default = pkgs.mkShellNoCC {
             buildInputs = with pkgs; [
-              git
               just
               nodejs_24
               pnpm_10

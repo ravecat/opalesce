@@ -2,6 +2,8 @@ node_modules/
 dist/
 coverage/
 generated/
+.nx/cache
+.nx/workspace-data
 
 .plans/
 tmp/

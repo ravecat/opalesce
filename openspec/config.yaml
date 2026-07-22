@@ -1,0 +1,33 @@
+schema: spec-driven
+
+context: |
+  This repository is the package-first opalesce workspace. Nx projects live under
+  packages/* and use the @opalesce scope; the repository root is workspace
+  infrastructure and is not an Nx project.
+
+  The current root source tree contains exploratory CLI, config loader, plugin
+  runtime, AsyncAPI processing, emitter, test, release, and workflow artifacts.
+  These may coexist during migration but do not define future package contracts.
+
+  The repository uses pnpm 10, Node.js 24, TypeScript 6, Vitest, ESLint, oxfmt,
+  Nix flakes, and Just. The Nix development shell supports x86_64-linux,
+  aarch64-linux, x86_64-darwin, and aarch64-darwin.
+
+  Build new functionality in focused packages under packages/*. Defer migration
+  or removal of current root artifacts and all package publication behavior to
+  explicit follow-up changes.
+
+rules:
+  proposal:
+    - Start from the package-first target architecture and identify transitional boundaries.
+    - State explicit non-goals for deferred package migration and release work.
+  design:
+    - Record package ownership and dependency direction.
+    - Prefer the smallest Nx configuration that uses the existing pnpm toolchain.
+    - Keep the repository root outside the Nx project graph.
+  specs:
+    - Express requirements as observable behavior with testable scenarios.
+    - Keep plugin, template, runner, and artifact-generation contracts out of scope unless explicitly requested.
+  tasks:
+    - Sequence workspace foundations before package implementation.
+    - Include focused validation and full regression validation.

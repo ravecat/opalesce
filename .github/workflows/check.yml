@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   check:
-    name: Check package
+    name: Check workspace
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,5 +29,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check source
-        run: pnpm run check
+      - name: Check workspace
+        run: pnpm run check:workspace
