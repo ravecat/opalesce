@@ -1,0 +1,20 @@
+{
+  "name": "@opalesce/core",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/core/src",
+  "targets": {
+    "check": {
+      "dependsOn": ["verify-package"]
+    },
+    "verify-package": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "cache": true,
+      "options": {
+        "command": "pnpm exec tsc -p tsconfig.package.json && node scripts/verify-package.mjs",
+        "cwd": "packages/core"
+      }
+    }
+  }
+}

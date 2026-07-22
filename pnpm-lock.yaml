@@ -67,6 +67,12 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@25.6.0)(yaml@2.9.0)
 
+  packages/core:
+    dependencies:
+      '@asyncapi/parser':
+        specifier: ^3.6.0
+        version: 3.6.0
+
 packages:
 
   '@actions/core@3.0.0':

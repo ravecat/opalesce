@@ -18,6 +18,11 @@
     "allowSyntheticDefaultImports": true,
     "types": ["node"]
   },
+  "references": [
+    {
+      "path": "./packages/core"
+    }
+  ],
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "src/**/*.test.ts", "src/**/__snapshots__/**"]
 }
