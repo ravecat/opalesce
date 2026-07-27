@@ -1,39 +1,13 @@
 {
   "name": "opalesce",
   "version": "0.1.0",
-  "description": "Config-driven AsyncAPI to JSON Schema, TypeScript, and Zod generator",
-  "keywords": [
-    "asyncapi",
-    "codegen",
-    "typescript",
-    "zod"
-  ],
+  "private": true,
+  "description": "Opalesce workspace",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ravecat/asyncapi.git"
+    "url": "git+https://github.com/ravecat/opalesce.git"
   },
-  "bin": {
-    "asyncapi-codegen": "./dist/cli.js"
-  },
-  "files": [
-    "dist"
-  ],
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": "./dist/index.js",
-    "./cli": "./dist/cli.js",
-    "./config": "./dist/config.js",
-    "./plugins": "./dist/plugins/index.js",
-    "./plugins/asyncapi": "./dist/plugins/asyncapi.js",
-    "./plugins/typescript": "./dist/plugins/typescript.js",
-    "./plugins/zod": "./dist/plugins/zod.js"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json -f",
     "build:workspace": "nx run-many -t build",

@@ -2,7 +2,7 @@
   "name": "@opalesce/core",
   "version": "0.0.0",
   "private": true,
-  "description": "Official AsyncAPI document parsing boundary for Opalesce",
+  "description": "AsyncAPI document parsing boundary for Opalesce",
   "files": [
     "dist"
   ],
