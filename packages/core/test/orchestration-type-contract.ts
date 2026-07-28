@@ -1,13 +1,12 @@
-import type {
-  AsyncAPIDocumentInterface,
-  Diagnostic,
-  Input,
-  ParseAsyncAPIOptions,
-} from "@opalesce/core";
 import {
   createServiceToken,
   defineConfig,
   definePlugin,
+  run,
+  type AsyncAPIDocumentInterface,
+  type Diagnostic,
+  type Input,
+  type ParseAsyncAPIOptions,
   type PipelineConfig,
   type PipelineResult,
   type PluginBuildContext,
@@ -61,6 +60,7 @@ export type ConfigUsesCoreInput = Expect<Equal<PipelineConfig["input"], Input>>;
 export type ConfigUsesCoreParserOptions = Expect<
   Equal<PipelineConfig["parser"], ParseAsyncAPIOptions | undefined>
 >;
+export type RunUsesPipelineConfig = Expect<Equal<Parameters<typeof run>[0], PipelineConfig>>;
 export type ResultUsesOfficialDocument = Expect<
   Equal<PipelineResult["document"], AsyncAPIDocumentInterface>
 >;

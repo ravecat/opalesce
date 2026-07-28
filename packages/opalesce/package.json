@@ -21,10 +21,6 @@
     "./config": {
       "types": "./dist/config.d.ts",
       "import": "./dist/config.js"
-    },
-    "./orchestrator": {
-      "types": "./dist/orchestrator.d.ts",
-      "import": "./dist/orchestrator.js"
     }
   },
   "scripts": {
@@ -35,6 +31,6 @@
   "dependencies": {
     "@opalesce/cli": "workspace:*",
     "@opalesce/config": "workspace:*",
-    "@opalesce/orchestrator": "workspace:*"
+    "@opalesce/core": "workspace:*"
   }
 }

@@ -1,4 +1,4 @@
-import { parseAsyncAPI } from "@opalesce/core";
+import { parseAsyncAPI } from "../parseAsyncAPI.js";
 import { ArtifactStore } from "./artifacts.js";
 import { PluginExecutionError } from "./errors.js";
 import { orderPlugins } from "./orderPlugins.js";
@@ -24,7 +24,7 @@ async function runHook(
   }
 }
 
-export async function runPipeline(config: PipelineConfig): Promise<PipelineResult> {
+export async function run(config: PipelineConfig): Promise<PipelineResult> {
   const plugins = orderPlugins(config.plugins ?? []);
   const parsed = await parseAsyncAPI(config.input, config.parser);
   const services = new ServiceRegistry();

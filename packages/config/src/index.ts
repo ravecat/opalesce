@@ -1,4 +1,4 @@
-import type { OrchestrationPlugin, ParseAsyncAPIOptions } from "@opalesce/orchestrator";
+import type { OrchestrationPlugin, ParseAsyncAPIOptions } from "@opalesce/core";
 
 export interface OutputConfig {
   readonly path: string;

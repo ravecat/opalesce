@@ -21,6 +21,6 @@
     "check": "pnpm run typecheck && pnpm run test"
   },
   "dependencies": {
-    "@opalesce/orchestrator": "workspace:*"
+    "@opalesce/core": "workspace:*"
   }
 }

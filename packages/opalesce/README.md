@@ -58,7 +58,7 @@ Run generation:
 opalesce generate
 ```
 
-Projects install concrete output plugins separately. They do not need direct dependencies on `@opalesce/cli`, `@opalesce/config`, or `@opalesce/orchestrator`.
+Projects install concrete output plugins separately. They do not need direct dependencies on `@opalesce/cli`, `@opalesce/config`, or `@opalesce/core`.
 
 ## Public Entry Points
 
@@ -67,13 +67,13 @@ Projects install concrete output plugins separately. They do not need direct dep
 Use the root for normal config files, plugin authoring, and programmatic pipelines:
 
 ```ts
-import { defineConfig, definePipelineConfig, definePlugin, runPipeline } from "opalesce";
+import { defineConfig, definePipelineConfig, definePlugin, run } from "opalesce";
 ```
 
 - `defineConfig` authors a path-based `opalesce.config.*` file.
 - `definePlugin` authors an orchestration plugin.
 - `definePipelineConfig` authors an in-memory pipeline config.
-- `runPipeline` runs the in-memory pipeline directly.
+- `run` runs the in-memory pipeline directly.
 
 The root also exports the public config, plugin, service, parser, artifact, result, context, and error types.
 
@@ -85,22 +85,13 @@ Use the config-only entry when a config file wants the smallest explicit surface
 import { defineConfig, type OpalesceConfig } from "opalesce/config";
 ```
 
-### `opalesce/orchestrator`
-
-Use the low-level entry for the complete orchestration contract, including its original in-memory `defineConfig` helper:
-
-```ts
-import { defineConfig, definePlugin, runPipeline } from "opalesce/orchestrator";
-```
-
 ## Architecture
 
 ```text
 opalesce
   -> @opalesce/cli
   -> @opalesce/config
-  -> @opalesce/orchestrator
-       -> @opalesce/core
+  -> @opalesce/core
 ```
 
-The scoped packages remain focused implementation layers. The facade contains no config loading, pipeline, parsing, or persistence logic of its own.
+Core owns parsing and the filesystem-free plugin engine. CLI owns config loading and persistence. The facade contains no config loading, pipeline, parsing, or persistence logic of its own.

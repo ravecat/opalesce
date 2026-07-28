@@ -75,15 +75,15 @@ importers:
       '@opalesce/config':
         specifier: workspace:*
         version: link:../config
-      '@opalesce/orchestrator':
+      '@opalesce/core':
         specifier: workspace:*
-        version: link:../orchestrator
+        version: link:../core
 
   packages/config:
     dependencies:
-      '@opalesce/orchestrator':
+      '@opalesce/core':
         specifier: workspace:*
-        version: link:../orchestrator
+        version: link:../core
 
   packages/core:
     dependencies:
@@ -99,12 +99,6 @@ importers:
       '@opalesce/config':
         specifier: workspace:*
         version: link:../config
-      '@opalesce/orchestrator':
-        specifier: workspace:*
-        version: link:../orchestrator
-
-  packages/orchestrator:
-    dependencies:
       '@opalesce/core':
         specifier: workspace:*
         version: link:../core

@@ -48,7 +48,7 @@ interface OpalesceConfig {
 - `input` is one local AsyncAPI file path.
 - `output.path` is the generated artifact directory.
 - `output.clean` defaults to `false`. When enabled, the CLI accepts cleanup only for a safe directory below the config directory.
-- `parser` is forwarded to `@opalesce/core` through the orchestrator.
+- `parser` is forwarded to the in-memory engine in `@opalesce/core`.
 - `plugins` contains orchestration plugin instances.
 
 `defineConfig` returns the same object and exists only to preserve concrete TypeScript inference.

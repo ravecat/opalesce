@@ -15,11 +15,8 @@ assert.equal(packageJson.types, "./dist/index.d.ts");
 assert.equal(packageJson.exports["."].import, "./dist/index.js");
 assert.equal(packageJson.exports["."].types, "./dist/index.d.ts");
 assert.equal(packageJson.dependencies["@opalesce/config"], "workspace:*");
-assert.equal(packageJson.dependencies["@opalesce/orchestrator"], "workspace:*");
-assert.deepEqual(Object.keys(packageJson.dependencies), [
-  "@opalesce/config",
-  "@opalesce/orchestrator",
-]);
+assert.equal(packageJson.dependencies["@opalesce/core"], "workspace:*");
+assert.deepEqual(Object.keys(packageJson.dependencies), ["@opalesce/config", "@opalesce/core"]);
 
 const binEntry = new URL("../dist/bin.js", import.meta.url);
 const binShim = new URL("../bin/opalesce.js", import.meta.url);

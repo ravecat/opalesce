@@ -2,7 +2,7 @@ import { access, readdir } from "node:fs/promises";
 import { dirname, extname, parse, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { OpalesceConfig, OutputConfig } from "@opalesce/config";
-import type { OrchestrationPlugin, ParseAsyncAPIOptions } from "@opalesce/orchestrator";
+import type { OrchestrationPlugin, ParseAsyncAPIOptions } from "@opalesce/core";
 
 export const CONFIG_CANDIDATES = [
   "opalesce.config.ts",

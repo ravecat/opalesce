@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
-import type { Diagnostic, PipelineConfig } from "@opalesce/orchestrator";
-import { runPipeline } from "@opalesce/orchestrator";
+import { run, type Diagnostic, type PipelineConfig } from "@opalesce/core";
 import { resolveConfig, type ResolveConfigOptions } from "./config.js";
 import { writeArtifacts } from "./output.js";
 
@@ -18,7 +17,7 @@ export async function generate(options: ResolveConfigOptions): Promise<GenerateR
     ...(resolved.config.parser === undefined ? {} : { parser: resolved.config.parser }),
     ...(resolved.config.plugins === undefined ? {} : { plugins: resolved.config.plugins }),
   };
-  const result = await runPipeline(pipelineConfig);
+  const result = await run(pipelineConfig);
 
   await writeArtifacts({
     artifacts: result.artifacts,

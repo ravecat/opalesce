@@ -1,6 +1,6 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, parse, relative, resolve, sep } from "node:path";
-import type { GeneratedArtifact } from "@opalesce/orchestrator";
+import type { GeneratedArtifact } from "@opalesce/core";
 
 export class OutputError extends Error {
   override readonly name = "OutputError";

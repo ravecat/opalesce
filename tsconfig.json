@@ -29,9 +29,6 @@
       "path": "./packages/opalesce"
     },
     {
-      "path": "./packages/orchestrator"
-    },
-    {
       "path": "./packages/core"
     }
   ],

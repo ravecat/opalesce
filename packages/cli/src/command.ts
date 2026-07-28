@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import type { Diagnostic } from "@opalesce/orchestrator";
+import type { Diagnostic } from "@opalesce/core";
 import { generate, type GenerateResult } from "./generate.js";
 
 export const ROOT_HELP = `Usage: opalesce <command>

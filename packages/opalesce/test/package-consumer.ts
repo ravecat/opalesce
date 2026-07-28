@@ -3,16 +3,13 @@ import {
   defineConfig,
   definePipelineConfig,
   definePlugin,
-  runPipeline,
+  run,
   type Input,
   type OpalesceConfig,
+  type OrchestrationPlugin,
   type PipelineResult,
 } from "opalesce";
 import { defineConfig as defineConfigFromSubpath, type OutputConfig } from "opalesce/config";
-import {
-  defineConfig as definePipelineConfigFromSubpath,
-  type OrchestrationPlugin,
-} from "opalesce/orchestrator";
 
 declare const input: Input;
 declare const result: PipelineResult;
@@ -41,13 +38,9 @@ const pipelineConfig = definePipelineConfig({
   input,
   plugins: [pipelinePlugin],
 });
-const pipelineConfigFromSubpath = definePipelineConfigFromSubpath({
-  input,
-});
-const pipelineResult = runPipeline(pipelineConfig);
+const pipelineResult = run(pipelineConfig);
 
 void projectConfig;
 void projectConfigFromSubpath;
-void pipelineConfigFromSubpath;
 void pipelineResult;
 void result;

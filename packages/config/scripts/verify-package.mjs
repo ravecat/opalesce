@@ -11,8 +11,8 @@ assert.equal(packageJson.main, "./dist/index.js");
 assert.equal(packageJson.types, "./dist/index.d.ts");
 assert.equal(packageJson.exports["."].import, "./dist/index.js");
 assert.equal(packageJson.exports["."].types, "./dist/index.d.ts");
-assert.equal(packageJson.dependencies["@opalesce/orchestrator"], "workspace:*");
-assert.deepEqual(Object.keys(packageJson.dependencies), ["@opalesce/orchestrator"]);
+assert.equal(packageJson.dependencies["@opalesce/core"], "workspace:*");
+assert.deepEqual(Object.keys(packageJson.dependencies), ["@opalesce/core"]);
 
 const runtimeEntry = new URL("../dist/index.js", import.meta.url);
 const declarationEntry = new URL("../dist/index.d.ts", import.meta.url);

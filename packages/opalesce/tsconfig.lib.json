@@ -15,7 +15,7 @@
       "path": "../config/tsconfig.lib.json"
     },
     {
-      "path": "../orchestrator/tsconfig.lib.json"
+      "path": "../core/tsconfig.lib.json"
     }
   ]
 }

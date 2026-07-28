@@ -21,7 +21,19 @@ await Promise.all([access(runtimeEntry), access(declarationEntry)]);
 
 const runtime = await import(runtimeEntry.href);
 
-assert.deepEqual(Object.keys(runtime).sort(), ["AsyncAPIParseError", "parseAsyncAPI"]);
+assert.deepEqual(Object.keys(runtime).sort(), [
+  "ArtifactError",
+  "AsyncAPIParseError",
+  "PluginConfigurationError",
+  "PluginExecutionError",
+  "ServiceRegistryError",
+  "createServiceToken",
+  "defineConfig",
+  "definePlugin",
+  "parseAsyncAPI",
+  "run",
+]);
+assert.equal("runPipeline" in runtime, false);
 
 const runtimeSource = await readFile(runtimeEntry, "utf8");
 const declarationSource = await readFile(declarationEntry, "utf8");
@@ -31,3 +43,8 @@ assert.match(declarationSource, /AsyncAPIDocumentInterface/u);
 assert.match(declarationSource, /AsyncAPIParserOptions/u);
 assert.match(declarationSource, /ParseAsyncAPIOptions/u);
 assert.match(declarationSource, /ParsedAsyncAPI/u);
+assert.match(declarationSource, /OrchestrationPlugin/u);
+assert.match(declarationSource, /PipelineConfig/u);
+assert.match(declarationSource, /PipelineResult/u);
+assert.match(declarationSource, /run/u);
+assert.doesNotMatch(declarationSource, /runPipeline/u);

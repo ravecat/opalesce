@@ -3,7 +3,7 @@ import type {
   Diagnostic,
   Input,
   ParseAsyncAPIOptions,
-} from "@opalesce/core";
+} from "../parseAsyncAPI.js";
 import type { ServiceToken } from "./services.js";
 
 export interface GeneratedArtifact {

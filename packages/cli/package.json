@@ -26,6 +26,6 @@
   },
   "dependencies": {
     "@opalesce/config": "workspace:*",
-    "@opalesce/orchestrator": "workspace:*"
+    "@opalesce/core": "workspace:*"
   }
 }

@@ -1,4 +1,4 @@
-import { definePlugin, type ParseAsyncAPIOptions } from "@opalesce/orchestrator";
+import { definePlugin, type ParseAsyncAPIOptions } from "@opalesce/core";
 import { defineConfig, type OpalesceConfig, type OutputConfig } from "../src/index.js";
 
 type Equal<Left, Right> =

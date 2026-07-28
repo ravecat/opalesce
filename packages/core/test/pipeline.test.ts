@@ -1,13 +1,15 @@
-import { AsyncAPIParseError, parseAsyncAPI, type Input } from "@opalesce/core";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
   ArtifactError,
+  AsyncAPIParseError,
   createServiceToken,
+  parseAsyncAPI,
   PluginConfigurationError,
   PluginExecutionError,
-  runPipeline,
+  run,
   ServiceRegistryError,
   type GeneratedArtifact,
+  type Input,
   type OrchestrationPlugin,
 } from "../src/index.js";
 
@@ -44,9 +46,9 @@ function expectPluginCause(
   return rejection.cause;
 }
 
-describe("runPipeline", () => {
+describe("run", () => {
   it("returns an immutable empty result for a pipeline without plugins", async () => {
-    const result = await runPipeline({ input });
+    const result = await run({ input });
 
     expect(result.document.version()).toBe("3.1.0");
     expect(result.artifacts).toEqual([]);
@@ -61,7 +63,7 @@ describe("runPipeline", () => {
   it("preserves Core parse errors and runs no plugin hook", async () => {
     const calls: string[] = [];
     const rejection = await rejectionOf(
-      runPipeline({
+      run({
         input: "asyncapi: 3.1.0",
         plugins: [
           {
@@ -100,7 +102,7 @@ describe("plugin ordering", () => {
       };
     }
 
-    const result = await runPipeline({
+    const result = await run({
       input,
       plugins: [
         plugin("consumer", ["provider"]),
@@ -126,7 +128,7 @@ describe("plugin ordering", () => {
   it("allows setup-only and build-only plugins", async () => {
     const calls: string[] = [];
 
-    await runPipeline({
+    await run({
       input,
       plugins: [
         {
@@ -182,7 +184,7 @@ describe("plugin ordering", () => {
     readonly code: PluginConfigurationError["code"];
   }[])("rejects $name before parsing", async ({ plugins, code }) => {
     const rejection = await rejectionOf(
-      runPipeline({
+      run({
         input: "invalid input that Core must not parse",
         plugins,
       }),
@@ -206,7 +208,7 @@ describe("shared services", () => {
     const secondToken = createServiceToken<string>("value");
     const consumed: Array<number | string> = [];
 
-    await runPipeline({
+    await run({
       input,
       plugins: [
         {
@@ -235,7 +237,7 @@ describe("shared services", () => {
   it("wraps duplicate service provision with the provider context", async () => {
     const token = createServiceToken<string>("schema");
     const rejection = await rejectionOf(
-      runPipeline({
+      run({
         input,
         plugins: [
           {
@@ -266,7 +268,7 @@ describe("shared services", () => {
   it("wraps missing service access with the consumer context", async () => {
     const token = createServiceToken<string>("schema");
     const rejection = await rejectionOf(
-      runPipeline({
+      run({
         input,
         plugins: [
           {
@@ -296,7 +298,7 @@ describe("artifact collection", () => {
     };
     let observed: readonly GeneratedArtifact[] = [];
 
-    const result = await runPipeline({
+    const result = await run({
       input,
       plugins: [
         {
@@ -340,7 +342,7 @@ describe("artifact collection", () => {
     "types/",
   ])("rejects invalid artifact path %j", async (path) => {
     const rejection = await rejectionOf(
-      runPipeline({
+      run({
         input,
         plugins: [
           {
@@ -364,7 +366,7 @@ describe("artifact collection", () => {
 
   it("rejects collisions across plugins", async () => {
     const rejection = await rejectionOf(
-      runPipeline({
+      run({
         input,
         plugins: [
           {
@@ -415,7 +417,7 @@ describe("plugin failures", () => {
           };
 
     const rejection = await rejectionOf(
-      runPipeline({
+      run({
         input,
         plugins: [
           failingPlugin,

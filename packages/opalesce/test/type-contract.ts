@@ -3,14 +3,13 @@ import {
   defineConfig,
   definePipelineConfig,
   definePlugin,
-  runPipeline,
+  run,
   type Input,
   type OpalesceConfig,
   type PipelineConfig,
   type ServiceToken,
 } from "../src/index.js";
 import { defineConfig as defineConfigFromSubpath } from "../src/config.js";
-import { defineConfig as definePipelineConfigFromSubpath } from "../src/orchestrator.js";
 
 type Equal<Left, Right> =
   (<Value>() => Value extends Left ? 1 : 2) extends <Value>() => Value extends Right ? 1 : 2
@@ -52,11 +51,7 @@ const pipelineConfig = definePipelineConfig({
   plugins: [plugin({ path: "version.txt" })],
 });
 
-const pipelineConfigFromSubpath = definePipelineConfigFromSubpath({
-  input,
-});
-
-const result = runPipeline(pipelineConfig);
+const result = run(pipelineConfig);
 
 // @ts-expect-error Project config requires an output path.
 defineConfig({ input: "./asyncapi.yaml" });
@@ -66,7 +61,6 @@ defineConfig({ input, output: { path: "./generated" } });
 
 void projectConfig;
 void projectConfigFromSubpath;
-void pipelineConfigFromSubpath;
 void result;
 void token;
 
@@ -74,7 +68,7 @@ export type ConfigUsesProjectContract = Expect<
   typeof projectConfig extends OpalesceConfig ? true : false
 >;
 export type PipelineHelperUsesPipelineContract = Expect<
-  Equal<Parameters<typeof runPipeline>[0], PipelineConfig>
+  Equal<Parameters<typeof run>[0], PipelineConfig>
 >;
 export type PluginOptionsArePreserved = Expect<
   Equal<Parameters<typeof plugin>, [{ readonly path: string }]>

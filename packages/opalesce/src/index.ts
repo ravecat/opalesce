@@ -7,9 +7,9 @@ export {
   definePlugin,
   PluginConfigurationError,
   PluginExecutionError,
-  runPipeline,
+  run,
   ServiceRegistryError,
-} from "@opalesce/orchestrator";
+} from "@opalesce/core";
 export type {
   ArtifactErrorCode,
   AsyncAPIDocumentInterface,
@@ -27,4 +27,4 @@ export type {
   PluginSetupContext,
   ServiceRegistryErrorCode,
   ServiceToken,
-} from "@opalesce/orchestrator";
+} from "@opalesce/core";

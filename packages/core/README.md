@@ -1,6 +1,6 @@
-# @opalesce/orchestrator
+# @opalesce/core
 
-`@opalesce/orchestrator` runs an in-memory AsyncAPI plugin pipeline for Opalesce. It parses input once through `@opalesce/core`, resolves plugin dependencies, runs plugin lifecycle hooks, shares typed services, and collects generated text artifacts without writing files.
+`@opalesce/core` is the in-memory AsyncAPI generation engine for Opalesce. It parses input once, resolves plugin dependencies, runs plugin lifecycle hooks, shares typed services, and collects generated text artifacts without writing files.
 
 The package is currently private and intended for use by other packages in this workspace. Normal consumers use the `opalesce` facade, while `@opalesce/config` and `@opalesce/cli` remain the focused config, filesystem, and command layers.
 
@@ -35,14 +35,14 @@ export default defineConfig({
 opalesce generate
 ```
 
-The CLI discovers the config, reads the input, calls `runPipeline` once, and writes successful artifacts. The config remains side-effect free.
+The CLI discovers the config, reads the input, calls `run` once, and writes successful artifacts. The config remains side-effect free.
 
 ## Programmatic Usage
 
-Call `runPipeline` explicitly when another program already owns input loading and artifact persistence:
+Call `run` explicitly when another program already owns input loading and artifact persistence:
 
 ```ts
-import { definePipelineConfig, definePlugin, runPipeline, type Input } from "opalesce";
+import { definePipelineConfig, definePlugin, run, type Input } from "opalesce";
 
 const input = {
   asyncapi: "3.1.0",
@@ -67,7 +67,7 @@ const config = definePipelineConfig({
   plugins: [versionFile({ path: "metadata/version.txt" })],
 });
 
-const result = await runPipeline(config);
+const result = await run(config);
 
 console.log(result.artifacts);
 ```
@@ -85,12 +85,12 @@ interface PipelineResult {
 
 ## Internal Workspace Usage
 
-Internal packages can depend on the orchestration layer directly:
+Internal packages can depend on Core directly:
 
 ```json
 {
   "dependencies": {
-    "@opalesce/orchestrator": "workspace:*"
+    "@opalesce/core": "workspace:*"
   }
 }
 ```
@@ -105,11 +105,11 @@ The scoped package is not currently published and is not a normal consumer depen
 
 ## Pipeline Lifecycle
 
-`runPipeline` executes one deterministic pipeline:
+`run` executes one deterministic pipeline:
 
 1. Validate plugin names and dependency relationships.
 2. Resolve a stable topological plugin order.
-3. Parse `config.input` once through `@opalesce/core`.
+3. Parse `config.input` once.
 4. Run every plugin `setup` hook in resolved order.
 5. Run every plugin `build` hook in the same order.
 6. Return a frozen result with all in-memory artifacts.
@@ -233,7 +233,7 @@ These failures use `PluginConfigurationError` and occur before Core parses the i
 Service tokens allow one plugin to provide a typed in-memory capability to another plugin without adding untyped fields to a global context.
 
 ```ts
-import { createServiceToken, definePipelineConfig, definePlugin, runPipeline } from "opalesce";
+import { createServiceToken, definePipelineConfig, definePlugin, run } from "opalesce";
 
 interface DocumentInfo {
   readonly asyncapiVersion: string;
@@ -263,7 +263,7 @@ const documentInfoFile = definePlugin(() => ({
   },
 }));
 
-const result = await runPipeline(
+const result = await run(
   definePipelineConfig({
     input,
     plugins: [documentInfoFile(), documentInfoProvider()],
@@ -315,16 +315,16 @@ const barrelPlugin = definePlugin(() => ({
 }));
 ```
 
-The orchestrator returns artifacts but does not write them. A facade or storage layer owns output-directory resolution, atomic writes, cleanup, and rollback.
+Core returns artifacts but does not write them. A facade or storage layer owns output-directory resolution, atomic writes, cleanup, and rollback.
 
 ## Error Handling
 
 ```ts
-import { PluginConfigurationError, PluginExecutionError, runPipeline } from "opalesce";
+import { PluginConfigurationError, PluginExecutionError, run } from "opalesce";
 import { AsyncAPIParseError } from "@opalesce/core";
 
 try {
-  await runPipeline(config);
+  await run(config);
 } catch (error) {
   if (error instanceof PluginConfigurationError) {
     console.error(error.code, error.pluginNames);
@@ -352,16 +352,18 @@ The pipeline is fail-fast and returns no partial result after an error.
 
 Runtime exports:
 
+- `parseAsyncAPI`
+- `AsyncAPIParseError`
 - `defineConfig`
 - `definePlugin`
-- `runPipeline`
+- `run`
 - `createServiceToken`
 - `PluginConfigurationError`
 - `PluginExecutionError`
 - `ServiceRegistryError`
 - `ArtifactError`
 
-The root entry point also exports the pipeline, plugin, context, service, artifact, and error-code types. It re-exports the Core types used by the public contract:
+The root entry point also exports the parser, pipeline, plugin, context, service, artifact, and error-code types:
 
 - `Input`
 - `ParseAsyncAPIOptions`
@@ -370,7 +372,7 @@ The root entry point also exports the pipeline, plugin, context, service, artifa
 
 ## Current Boundaries
 
-`@opalesce/orchestrator` intentionally does not:
+`@opalesce/core` intentionally does not:
 
 - Discover or execute `opalesce.config.*`.
 - Provide an `opalesce` bin or CLI arguments.
@@ -406,16 +408,16 @@ The workspace pins pnpm through the root `packageManager` field. For manual setu
 
 Run commands from the repository root:
 
-| Command                                          | Purpose                                                                           |
-| ------------------------------------------------ | --------------------------------------------------------------------------------- |
-| `pnpm exec nx build @opalesce/orchestrator`      | Build ESM JavaScript and TypeScript declarations, including package dependencies. |
-| `pnpm --dir packages/orchestrator run typecheck` | Type-check package source and tests without emitting files.                       |
-| `pnpm --dir packages/orchestrator run test`      | Run focused orchestrator runtime tests.                                           |
-| `pnpm exec nx run @opalesce/orchestrator:check`  | Build and verify the package boundary, then run type-checking and tests.          |
-| `pnpm run build:workspace`                       | Build every Nx package project.                                                   |
-| `pnpm run check:workspace`                       | Run package checks across the Nx workspace.                                       |
+| Command                                  | Purpose                                                         |
+| ---------------------------------------- | --------------------------------------------------------------- |
+| `pnpm exec nx build @opalesce/core`      | Build ESM JavaScript and TypeScript declarations.               |
+| `pnpm --dir packages/core run typecheck` | Type-check package source and tests without emitting files.     |
+| `pnpm --dir packages/core run test`      | Run focused parser and orchestration runtime tests.             |
+| `pnpm exec nx run @opalesce/core:check`  | Build and verify the package, then run type-checking and tests. |
+| `pnpm run build:workspace`               | Build every Nx package project.                                 |
+| `pnpm run check:workspace`               | Run package checks across the Nx workspace.                     |
 
-The package tests cover Core option forwarding, lifecycle ordering, dependency validation, typed services, artifact validation, immutable results, package exports, and error propagation.
+The package tests cover parser option forwarding, lifecycle ordering, dependency validation, typed services, artifact validation, immutable results, package exports, and error propagation.
 
 ## License
 

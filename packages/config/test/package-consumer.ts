@@ -1,5 +1,5 @@
 import { defineConfig, type OpalesceConfig, type OutputConfig } from "@opalesce/config";
-import { definePlugin, type ParseAsyncAPIOptions } from "@opalesce/orchestrator";
+import { definePlugin, type ParseAsyncAPIOptions } from "@opalesce/core";
 
 declare const parser: ParseAsyncAPIOptions;
 

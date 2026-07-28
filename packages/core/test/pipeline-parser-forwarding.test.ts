@@ -1,10 +1,10 @@
-import { type Input, type ParseAsyncAPIOptions, type parseAsyncAPI } from "@opalesce/core";
+import type { Input, ParseAsyncAPIOptions, parseAsyncAPI } from "../src/parseAsyncAPI.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const parseAsyncAPISpy = vi.hoisted(() => vi.fn<typeof parseAsyncAPI>());
 
-vi.mock("@opalesce/core", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@opalesce/core")>();
+vi.mock("../src/parseAsyncAPI.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../src/parseAsyncAPI.js")>();
 
   parseAsyncAPISpy.mockImplementation(actual.parseAsyncAPI);
 
@@ -14,7 +14,7 @@ vi.mock("@opalesce/core", async (importOriginal) => {
   };
 });
 
-import { runPipeline } from "../src/index.js";
+import { run } from "../src/index.js";
 
 const input: Input = {
   asyncapi: "3.1.0",
@@ -35,11 +35,11 @@ describe("Core delegation", () => {
       parse: {
         applyTraits: false,
         parseSchemas: false,
-        source: "memory://orchestrator/asyncapi.yaml",
+        source: "memory://core/asyncapi.yaml",
       },
     };
 
-    await runPipeline({ input, parser });
+    await run({ input, parser });
 
     expect(parseAsyncAPISpy).toHaveBeenCalledTimes(1);
     expect(parseAsyncAPISpy).toHaveBeenCalledWith(input, parser);

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as config from "../src/config.js";
 import * as facade from "../src/index.js";
-import * as orchestrator from "../src/orchestrator.js";
 
 describe("facade exports", () => {
   it("exposes a deliberate root runtime API", () => {
@@ -14,26 +13,14 @@ describe("facade exports", () => {
       "defineConfig",
       "definePipelineConfig",
       "definePlugin",
-      "runPipeline",
+      "run",
     ]);
+    expect("runPipeline" in facade).toBe(false);
   });
 
-  it("maps config and orchestration helpers without wrapping them", () => {
+  it("maps config and Core helpers without wrapping project config", () => {
     expect(Object.keys(config)).toEqual(["defineConfig"]);
-    expect(Object.keys(orchestrator).sort()).toEqual([
-      "ArtifactError",
-      "PluginConfigurationError",
-      "PluginExecutionError",
-      "ServiceRegistryError",
-      "createServiceToken",
-      "defineConfig",
-      "definePlugin",
-      "runPipeline",
-    ]);
     expect(facade.defineConfig).toBe(config.defineConfig);
-    expect(facade.definePipelineConfig).toBe(orchestrator.defineConfig);
-    expect(facade.definePlugin).toBe(orchestrator.definePlugin);
-    expect(facade.runPipeline).toBe(orchestrator.runPipeline);
   });
 
   it("keeps project config authoring side-effect free", () => {

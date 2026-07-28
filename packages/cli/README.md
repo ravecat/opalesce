@@ -1,6 +1,6 @@
 # @opalesce/cli
 
-`@opalesce/cli` turns an `opalesce.config.*` file into one generation run. It discovers and validates project config, reads the AsyncAPI input, invokes `@opalesce/orchestrator`, persists successful artifacts, and maps failures to command output and exit codes.
+`@opalesce/cli` turns an `opalesce.config.*` file into one generation run. It discovers and validates project config, reads the AsyncAPI input, invokes `@opalesce/core`, persists successful artifacts, and maps failures to command output and exit codes.
 
 ## Quick Start
 
@@ -120,11 +120,10 @@ Operational failures are rendered without automatic stack traces.
 opalesce
   -> @opalesce/cli
   -> @opalesce/config
-  -> @opalesce/orchestrator
-       -> @opalesce/core
+  -> @opalesce/core
 ```
 
-Use `runPipeline` directly only when another program already owns input loading and artifact persistence.
+Use Core `run` directly only when another program already owns input loading and artifact persistence.
 
 `@opalesce/cli` is an internal package boundary. Consumers receive its executable through `opalesce`.
 
