@@ -46,7 +46,7 @@ assert.match(binShimSource, /^#!\/usr\/bin\/env node\n/u);
 assert.match(binShimSource, /import "\.\.\/dist\/bin\.js";/u);
 assert.doesNotMatch(binSource, /(?:\.\.\/)+src\//u);
 assert.doesNotMatch(commandSource, /(?:\.\.\/)+src\//u);
-assert.deepEqual(Object.keys(runtime), ["runCli"]);
+assert.deepEqual(Object.keys(runtime), ["run"]);
 assert.match(declarationSource, /CommandIO/u);
 assert.match(declarationSource, /RunCliOptions/u);
 assert.match(declarationSource, /TextWriter/u);

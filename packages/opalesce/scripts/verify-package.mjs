@@ -101,7 +101,7 @@ assert.equal(rootRuntime.definePlugin, orchestratorRuntime.definePlugin);
 assert.equal(rootRuntime.runPipeline, orchestratorRuntime.runPipeline);
 
 assert.match(binSource, /^#!\/usr\/bin\/env node\n/u);
-assert.match(binSource, /import \{ runCli \} from "@opalesce\/cli";/u);
+assert.match(binSource, /import \{ run \} from "@opalesce\/cli";/u);
 assert.match(binShimSource, /^#!\/usr\/bin\/env node\n/u);
 assert.match(binShimSource, /import "\.\.\/dist\/bin\.js";/u);
 assert.doesNotMatch(rootSource, /(?:\.\.\/)+src\//u);

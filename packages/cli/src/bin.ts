@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-import { runCli } from "./command.js";
+import { run } from "./command.js";
 
-process.exitCode = await runCli(process.argv.slice(2));
+process.exitCode = await run(process.argv.slice(2));

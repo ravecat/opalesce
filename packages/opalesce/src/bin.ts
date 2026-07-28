@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-import { runCli } from "@opalesce/cli";
+import { run } from "@opalesce/cli";
 
-process.exitCode = await runCli(process.argv.slice(2));
+process.exitCode = await run(process.argv.slice(2));

@@ -1,6 +1,6 @@
 ## 1. CLI Package Boundary
 
-- [x] 1.1 Add an explicit `@opalesce/cli` ESM root export for `runCli` and its command IO types
+- [x] 1.1 Add an explicit `@opalesce/cli` ESM root export for `run` and its command IO types
 - [x] 1.2 Extend CLI package verification to cover the runtime and declaration entry points without changing existing bin behavior
 
 ## 2. Facade Package Foundation

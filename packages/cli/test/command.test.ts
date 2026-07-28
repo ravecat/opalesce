@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
-import { runCli, type CommandIO } from "../src/command.js";
+import { run, type CommandIO } from "../src/command.js";
 
 const VALID_ASYNCAPI = `asyncapi: 3.1.0
 info:
@@ -52,7 +52,7 @@ afterEach(async () => {
   );
 });
 
-describe("runCli", () => {
+describe("run", () => {
   it.each([
     { arguments_: ["--help"], expected: "Usage: opalesce <command>" },
     {
@@ -62,7 +62,7 @@ describe("runCli", () => {
   ])("prints help with exit code 0", async ({ arguments_, expected }) => {
     const capture = captureIO();
 
-    await expect(runCli(arguments_, { io: capture.io })).resolves.toBe(0);
+    await expect(run(arguments_, { io: capture.io })).resolves.toBe(0);
     expect(capture.stdout.join("")).toContain(expected);
     expect(capture.stderr).toEqual([]);
   });
@@ -77,7 +77,7 @@ describe("runCli", () => {
   ])("returns exit code 2 for invalid usage", async ({ arguments_, expected }) => {
     const capture = captureIO();
 
-    await expect(runCli(arguments_, { io: capture.io })).resolves.toBe(2);
+    await expect(run(arguments_, { io: capture.io })).resolves.toBe(2);
     expect(capture.stderr.join("")).toContain(expected);
   });
 
@@ -85,7 +85,7 @@ describe("runCli", () => {
     const directory = await temporaryDirectory();
     const capture = captureIO();
 
-    await expect(runCli(["generate"], { cwd: directory, io: capture.io })).resolves.toBe(1);
+    await expect(run(["generate"], { cwd: directory, io: capture.io })).resolves.toBe(1);
     expect(capture.stderr.join("")).toContain("config not found");
     expect(capture.stderr.join("")).not.toContain("\n    at ");
   });
@@ -111,7 +111,7 @@ describe("runCli", () => {
     const capture = captureIO();
 
     await expect(
-      runCli(
+      run(
         [
           "generate",
           "./override.yaml",

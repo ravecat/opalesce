@@ -74,9 +74,9 @@ The name `defineConfig` always means the path-based project config consumed by `
 
 ### 4. Give `@opalesce/cli` a narrow programmatic command entry
 
-`@opalesce/cli` gains a package root that exports `runCli` and the command IO types from its existing command module. The existing `@opalesce/cli` bin remains unchanged.
+`@opalesce/cli` gains a package root that exports `run` and the command IO types from its existing command module. The existing `@opalesce/cli` bin remains unchanged.
 
-The facade owns its own stable bin shim and built bin entry. The built entry calls `runCli(process.argv.slice(2))` and assigns the returned code to `process.exitCode`. This preserves arguments, stdout, stderr, and exit-code behavior without spawning another Node.js process or importing an undeclared deep path.
+The facade owns its own stable bin shim and built bin entry. The built entry calls `run(process.argv.slice(2))` and assigns the returned code to `process.exitCode`. This preserves arguments, stdout, stderr, and exit-code behavior without spawning another Node.js process or importing an undeclared deep path.
 
 Importing the existing CLI bin as a side effect was considered, but it would make the facade depend on the internal file layout rather than an explicit package boundary.
 

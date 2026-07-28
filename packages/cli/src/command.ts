@@ -104,7 +104,7 @@ function renderSuccess(result: GenerateResult, io: CommandIO): void {
   writeLine(io.stdout, `Generated ${String(result.artifactCount)} ${noun} -> ${result.outputPath}`);
 }
 
-export async function runCli(
+export async function run(
   arguments_: readonly string[],
   options: RunCliOptions = {},
 ): Promise<number> {

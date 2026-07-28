@@ -73,11 +73,11 @@ The facade package SHALL expose an `opalesce` bin through a stable Node.js shim.
 
 ### Requirement: Internal CLI command boundary
 
-`@opalesce/cli` SHALL expose a built ESM package root containing `runCli` and its public command IO types so the facade can delegate without importing CLI source or a package-private deep path. The existing CLI executable SHALL retain its current behavior.
+`@opalesce/cli` SHALL expose a built ESM package root containing `run` and its public command IO types so the facade can delegate without importing CLI source or a package-private deep path. The existing CLI executable SHALL retain its current behavior.
 
 #### Scenario: Facade imports the CLI command API
 
-- **WHEN** the facade build resolves `runCli` from `@opalesce/cli`
+- **WHEN** the facade build resolves `run` from `@opalesce/cli`
 - **THEN** it resolves through the CLI package export map and emitted declarations
 
 #### Scenario: Existing CLI bin remains valid
