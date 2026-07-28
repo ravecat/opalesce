@@ -4,6 +4,8 @@
 
 All affected packages are private and versioned together, so independent publication and compatibility are not current constraints. The CLI must continue to own config discovery, filesystem access, output persistence, terminal rendering, and exit behavior.
 
+The repository root still contains the exploratory generator source, tests, build output, Vitest setup, generator dependencies, and semantic-release configuration that predate the package workspace. The replacement Core, config, CLI, and facade boundaries now cover the retained behavior, so those transitional artifacts no longer have an owner.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -12,6 +14,7 @@ All affected packages are private and versioned together, so independent publica
 - Preserve current parsing, plugin ordering, lifecycle, service, artifact, and error behavior.
 - Expose the programmatic runner only as `run`.
 - Remove the redundant orchestrator package, facade subpath, workspace references, and dependency edges.
+- Remove the superseded exploratory root package and leave the root as a private workspace host.
 - Keep the TypeScript package graph and Nx project graph valid.
 
 **Non-Goals:**
@@ -48,6 +51,14 @@ Extracting an AsyncAPI adapter now was rejected because Opalesce currently suppo
 
 The facade does not re-export CLI's command runner, avoiding a root export collision with Core's `run`.
 
+### The repository root is a workspace host
+
+The root `src`, `test`, `dist`, and root Vitest configuration are removed instead of being migrated because their replacement package contracts already exist. Generator-only dependencies and TypeScript path aliases are removed from the root importer. The root TypeScript config becomes a solution-style project reference file, while build, typecheck, test, and check commands delegate to Nx package targets.
+
+The old semantic-release config and publish workflow are also removed. They target the former single root package and cannot safely publish the current private multi-package graph. Publication remains deferred until a dedicated change defines package versions, dependency ranges, and release ownership.
+
+Nix and Just remain workspace tooling. Their commands are redirected to workspace scripts, and the Nix description is renamed from the former AsyncAPI package identity to Opalesce.
+
 ## Risks / Trade-offs
 
 - [Core grows beyond parsing] -> Keep parsing and orchestration in separate internal modules with explicit barrel exports.
@@ -55,6 +66,8 @@ The facade does not re-export CLI's command runner, avoiding a root export colli
 - [Removing `runPipeline` breaks internal callers] -> Update every workspace import and add package-consumer and type-contract checks for `run`.
 - [Historical documents mention the old architecture] -> Preserve them as immutable decision history and add this change as the superseding record.
 - [Removing a package can leave stale workspace metadata] -> Regenerate the pnpm lockfile and validate the complete Nx build and check graphs.
+- [Removing root release automation leaves no publish path] -> Keep all packages private and design multi-package release ownership in a dedicated follow-up.
+- [Deleting legacy coverage can hide a behavior gap] -> Retain only behavior represented by current package contracts and run focused plus aggregate package tests before removal is accepted.
 
 ## Migration Plan
 
@@ -62,9 +75,10 @@ The facade does not re-export CLI's command runner, avoiding a root export colli
 2. Move orchestration tests and package-contract assertions into Core.
 3. Redirect config, CLI, and facade dependencies and imports to Core.
 4. Remove the facade orchestrator subpath and the orchestrator workspace project.
-5. Regenerate workspace metadata, update current package documentation, and run targeted plus aggregate validation.
+5. Remove the superseded root package implementation, tests, build and release configuration, dependencies, and package-specific metadata.
+6. Regenerate workspace metadata, update current package documentation, and run targeted plus aggregate validation.
 
-Rollback restores `packages/orchestrator`, redirects consumer dependencies to it, restores `runPipeline` and `opalesce/orchestrator`, and regenerates workspace metadata.
+Rollback restores `packages/orchestrator` and the deleted root artifacts from version control, redirects consumer dependencies to orchestrator, restores `runPipeline` and `opalesce/orchestrator`, and regenerates workspace metadata.
 
 ## Open Questions
 

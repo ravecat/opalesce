@@ -9,43 +9,28 @@
   },
   "type": "module",
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json -f",
+    "build": "pnpm run build:workspace",
     "build:workspace": "nx run-many -t build",
-    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test",
-    "check:workspace": "nx run-many -t check",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run check:workspace",
+    "check:workspace": "nx run-many -t check --parallel=1",
     "lint": "eslint .",
     "format": "eslint . --fix && oxfmt .",
     "format:check": "oxfmt --check .",
     "format.check": "pnpm run format:check",
     "generate": "nx run opalesce:build && opalesce generate",
-    "release": "semantic-release",
-    "test": "pnpm run test:unit && pnpm run test:smoke",
-    "test:unit": "vitest run --project unit",
-    "test:smoke": "vitest run --project smoke",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
-  },
-  "dependencies": {
-    "@asyncapi/parser": "^3.6.0",
-    "json-schema-to-typescript": "^15.0.4",
-    "json-schema-to-zod": "^2.7.0",
-    "prettier": "^3.6.2"
+    "test": "nx run-many -t test --parallel=1",
+    "typecheck": "nx run-many -t typecheck"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@nx/js": "23.1.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
     "@types/node": "^25.6.0",
     "eslint": "^9.39.1",
     "nx": "23.1.0",
     "opalesce": "workspace:*",
     "oxfmt": "^0.54.0",
-    "semantic-release": "25.0.3",
-    "semantic-release-run-when": "1.0.0",
-    "tsc-alias": "^1.8.16",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.1",
-    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.34.0"

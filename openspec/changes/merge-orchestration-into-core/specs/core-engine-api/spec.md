@@ -49,3 +49,13 @@ The `opalesce` root SHALL export Core's `run`, while the executable entrypoint S
 
 - **WHEN** a consumer imports `run` from `opalesce` and invokes the installed `opalesce` executable
 - **THEN** the import executes the Core pipeline contract and the executable executes the CLI command contract
+
+### Requirement: Repository root is only a workspace host
+
+The private repository root MUST NOT contain the superseded exploratory generator source, tests, build output, package release automation, generator runtime dependencies, or AsyncAPI-specific package metadata. Root development commands SHALL delegate build, typecheck, test, and check work to the package workspace.
+
+#### Scenario: Inspect and validate the workspace root
+
+- **WHEN** the root files, manifest, lockfile importer, and development metadata are inspected
+- **THEN** no legacy generator package implementation or release boundary remains
+- **AND** workspace package projects remain buildable and testable through the root commands

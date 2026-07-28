@@ -1,5 +1,5 @@
 {
-  description = "AsyncAPI environment";
+  description = "Opalesce workspace";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";

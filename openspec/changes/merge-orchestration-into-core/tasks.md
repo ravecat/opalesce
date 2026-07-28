@@ -12,8 +12,10 @@
 
 - [x] 3.1 Remove the orchestrator package and its Nx, TypeScript, and pnpm workspace metadata
 - [x] 3.2 Update current Core, config, CLI, and facade documentation for the consolidated architecture and `run` API
+- [x] 3.3 Remove the superseded root source, tests, build and release artifacts, generator dependencies, and AsyncAPI-specific metadata; redirect root commands to workspace package targets
 
 ## 4. Validation
 
 - [x] 4.1 Run focused Core, config, CLI, and facade type checks, tests, builds, and package verification
 - [x] 4.2 Run workspace formatting, linting, build, and check regression commands and confirm no current code or metadata references the removed API
+- [x] 4.3 Confirm the cleaned root contains no legacy generator or release boundary and rerun root workspace build, typecheck, test, and check commands

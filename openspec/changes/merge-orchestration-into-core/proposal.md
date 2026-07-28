@@ -8,6 +8,7 @@ The package named `@opalesce/core` currently owns only AsyncAPI parsing while th
 - **BREAKING** Rename the programmatic pipeline entry point from `runPipeline` to `run`.
 - **BREAKING** Remove the `@opalesce/orchestrator` workspace package and the `opalesce/orchestrator` facade subpath.
 - Update `@opalesce/config`, `@opalesce/cli`, and `opalesce` to consume or re-export the Core contract.
+- Remove the superseded exploratory root source, tests, build output, release automation, generator dependencies, and AsyncAPI-specific workspace metadata.
 - Preserve CLI and filesystem ownership outside Core.
 - Keep historical OpenSpec changes unchanged as records of the earlier package split.
 - Defer publication, additional input adapters, and extraction of a lightweight plugin SDK to explicit follow-up changes.
@@ -28,4 +29,5 @@ None.
 - Expands the runtime and type exports of `@opalesce/core`.
 - Changes imports and workspace dependencies in config, CLI, and facade packages.
 - Changes the consumer-facing programmatic API from `runPipeline` to `run`.
+- Leaves the repository root as a private workspace host whose commands delegate to package projects.
 - Requires package-contract, type-contract, lifecycle, CLI, and facade regression coverage to move with the implementation.
