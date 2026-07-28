@@ -2,7 +2,7 @@
 
 `@opalesce/orchestrator` runs an in-memory AsyncAPI plugin pipeline for Opalesce. It parses input once through `@opalesce/core`, resolves plugin dependencies, runs plugin lifecycle hooks, shares typed services, and collects generated text artifacts without writing files.
 
-The package is currently private and intended for use by other packages in this workspace. `@opalesce/config` and `@opalesce/cli` provide the project-facing config, filesystem, and command layers above it.
+The package is currently private and intended for use by other packages in this workspace. Normal consumers use the `opalesce` facade, while `@opalesce/config` and `@opalesce/cli` remain the focused config, filesystem, and command layers.
 
 ## Project Workflow
 
@@ -10,8 +10,7 @@ Most projects describe generation without calling the pipeline directly:
 
 ```ts
 // opalesce.config.ts
-import { defineConfig } from "@opalesce/config";
-import { definePlugin } from "@opalesce/orchestrator";
+import { defineConfig, definePlugin } from "opalesce";
 
 const versionFile = definePlugin(() => ({
   name: "version-file",
@@ -43,7 +42,7 @@ The CLI discovers the config, reads the input, calls `runPipeline` once, and wri
 Call `runPipeline` explicitly when another program already owns input loading and artifact persistence:
 
 ```ts
-import { defineConfig, definePlugin, runPipeline, type Input } from "@opalesce/orchestrator";
+import { definePipelineConfig, definePlugin, runPipeline, type Input } from "opalesce";
 
 const input = {
   asyncapi: "3.1.0",
@@ -63,7 +62,7 @@ const versionFile = definePlugin((options: { readonly path: string }) => ({
   },
 }));
 
-const config = defineConfig({
+const config = definePipelineConfig({
   input,
   plugins: [versionFile({ path: "metadata/version.txt" })],
 });
@@ -84,9 +83,9 @@ interface PipelineResult {
 }
 ```
 
-## Workspace Usage
+## Internal Workspace Usage
 
-Add the package to another workspace package:
+Internal packages can depend on the orchestration layer directly:
 
 ```json
 {
@@ -102,7 +101,7 @@ Then refresh workspace links:
 pnpm install
 ```
 
-The package is not currently published and cannot be installed from the public npm registry.
+The scoped package is not currently published and is not a normal consumer dependency.
 
 ## Pipeline Lifecycle
 
@@ -154,7 +153,7 @@ An input string is treated as AsyncAPI document content, not as a filesystem pat
 `definePlugin` preserves the arguments and concrete return type of a plugin factory:
 
 ```ts
-import { definePlugin } from "@opalesce/orchestrator";
+import { definePlugin } from "opalesce";
 
 interface ManifestPluginOptions {
   readonly path: string;
@@ -234,12 +233,7 @@ These failures use `PluginConfigurationError` and occur before Core parses the i
 Service tokens allow one plugin to provide a typed in-memory capability to another plugin without adding untyped fields to a global context.
 
 ```ts
-import {
-  createServiceToken,
-  defineConfig,
-  definePlugin,
-  runPipeline,
-} from "@opalesce/orchestrator";
+import { createServiceToken, definePipelineConfig, definePlugin, runPipeline } from "opalesce";
 
 interface DocumentInfo {
   readonly asyncapiVersion: string;
@@ -269,10 +263,12 @@ const documentInfoFile = definePlugin(() => ({
   },
 }));
 
-const result = await runPipeline({
-  input,
-  plugins: [documentInfoFile(), documentInfoProvider()],
-});
+const result = await runPipeline(
+  definePipelineConfig({
+    input,
+    plugins: [documentInfoFile(), documentInfoProvider()],
+  }),
+);
 ```
 
 The generic token type controls both `provide` and `get`. Token identity, not the diagnostic name, selects the value, so two tokens with the same name remain independent.
@@ -324,11 +320,7 @@ The orchestrator returns artifacts but does not write them. A facade or storage 
 ## Error Handling
 
 ```ts
-import {
-  PluginConfigurationError,
-  PluginExecutionError,
-  runPipeline,
-} from "@opalesce/orchestrator";
+import { PluginConfigurationError, PluginExecutionError, runPipeline } from "opalesce";
 import { AsyncAPIParseError } from "@opalesce/core";
 
 try {

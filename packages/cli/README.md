@@ -4,14 +4,12 @@
 
 ## Quick Start
 
-Add the CLI, config API, orchestrator, and the plugins used by the project:
+Normal projects install the `opalesce` facade and only the output plugins they use:
 
 ```json
 {
   "devDependencies": {
-    "@opalesce/cli": "workspace:*",
-    "@opalesce/config": "workspace:*",
-    "@opalesce/orchestrator": "workspace:*"
+    "opalesce": "workspace:*"
   },
   "scripts": {
     "generate": "opalesce generate"
@@ -22,8 +20,7 @@ Add the CLI, config API, orchestrator, and the plugins used by the project:
 Create `opalesce.config.ts`:
 
 ```ts
-import { defineConfig } from "@opalesce/config";
-import { definePlugin } from "@opalesce/orchestrator";
+import { defineConfig, definePlugin } from "opalesce";
 
 const metadata = definePlugin(() => ({
   name: "metadata",
@@ -120,13 +117,16 @@ Operational failures are rendered without automatic stack traces.
 ## Architecture
 
 ```text
-@opalesce/cli
+opalesce
+  -> @opalesce/cli
   -> @opalesce/config
   -> @opalesce/orchestrator
-  -> @opalesce/core
+       -> @opalesce/core
 ```
 
 Use `runPipeline` directly only when another program already owns input loading and artifact persistence.
+
+`@opalesce/cli` is an internal package boundary. Consumers receive its executable through `opalesce`.
 
 ## Current Boundaries
 

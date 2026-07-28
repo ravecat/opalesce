@@ -27,9 +27,9 @@ Kubb's current package model provides the relevant consumer precedent: one top-l
 
 ## Decisions
 
-### 1. Add `packages/facade` with npm identity `opalesce`
+### 1. Add `packages/opalesce` with npm identity `opalesce`
 
-The facade is an ESM TypeScript Nx library at `packages/facade`, but its package and Nx project identity is `opalesce`. The directory describes its architectural role while the npm identity gives consumers the intended command and import:
+The facade is an ESM TypeScript Nx library at `packages/opalesce`, and its package and Nx project identity is `opalesce`. The directory matches the consumer-facing package name:
 
 ```text
 consumer
@@ -117,7 +117,7 @@ Focused facade checks run first, followed by aggregate workspace checks and the 
 5. Update consumer documentation to use `opalesce` while retaining internal package documentation for maintainers.
 6. Run facade, workspace, formatting, lint, type, smoke, and strict OpenSpec validation.
 
-Rollback removes `packages/facade`, restores the root name and direct CLI dependency, removes the facade reference and lockfile importer, and reverts the documentation. Internal config, CLI, orchestrator, and Core behavior remains intact throughout.
+Rollback removes `packages/opalesce`, restores the root name and direct CLI dependency, removes the facade reference and lockfile importer, and reverts the documentation. Internal config, CLI, orchestrator, and Core behavior remains intact throughout.
 
 ## Open Questions
 

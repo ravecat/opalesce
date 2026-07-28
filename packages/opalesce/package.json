@@ -1,8 +1,8 @@
 {
-  "name": "@opalesce/cli",
+  "name": "opalesce",
   "version": "0.0.0",
   "private": true,
-  "description": "Command-line generation facade for Opalesce",
+  "description": "Consumer-facing package facade for Opalesce",
   "bin": {
     "opalesce": "./bin/opalesce.js"
   },
@@ -17,6 +17,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js"
+    },
+    "./orchestrator": {
+      "types": "./dist/orchestrator.d.ts",
+      "import": "./dist/orchestrator.js"
     }
   },
   "scripts": {
@@ -25,6 +33,7 @@
     "check": "pnpm run typecheck && pnpm run test"
   },
   "dependencies": {
+    "@opalesce/cli": "workspace:*",
     "@opalesce/config": "workspace:*",
     "@opalesce/orchestrator": "workspace:*"
   }

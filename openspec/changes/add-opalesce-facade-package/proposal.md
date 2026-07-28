@@ -25,7 +25,7 @@ None.
 
 ## Impact
 
-- Adds `packages/facade` as an Nx package project with npm identity `opalesce`.
+- Adds `packages/opalesce` as an Nx package project with npm identity `opalesce`.
 - Adds workspace dependencies from the facade to `@opalesce/config`, `@opalesce/orchestrator`, and `@opalesce/cli`.
 - Renames the private root package from `opalesce` to `@opalesce/workspace` to avoid duplicate workspace package identities.
 - Switches root command linking from direct `@opalesce/cli` usage to the facade package.

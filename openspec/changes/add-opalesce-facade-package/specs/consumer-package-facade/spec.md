@@ -2,7 +2,7 @@
 
 ### Requirement: Opalesce facade package boundary
 
-The workspace SHALL provide a private ESM TypeScript library at `packages/facade` with package and Nx project identity `opalesce`. The package SHALL emit JavaScript and TypeScript declarations for its documented root and subpath exports, SHALL expose the `opalesce` executable, and SHALL depend on `@opalesce/config`, `@opalesce/orchestrator`, and `@opalesce/cli` without depending on exploratory root source.
+The workspace SHALL provide a private ESM TypeScript library at `packages/opalesce` with package and Nx project identity `opalesce`. The package SHALL emit JavaScript and TypeScript declarations for its documented root and subpath exports, SHALL expose the `opalesce` executable, and SHALL depend on `@opalesce/config`, `@opalesce/orchestrator`, and `@opalesce/cli` without depending on exploratory root source.
 
 #### Scenario: Node.js consumer loads the facade
 
