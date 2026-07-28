@@ -1,26 +1,19 @@
-runner := "pnpm"
-
 default:
     @just --list
 
 setup:
-    {{ runner }} install
+    pnpm install
 
-build:
-    {{ runner }} run build
+[no-exit-message]
+[positional-arguments]
+nx +args:
+    @pnpm exec nx "$@"
 
 check:
-    {{ runner }} run check
+    pnpm exec eslint .
+    pnpm exec oxfmt --check .
+    pnpm exec nx run-many -t check --parallel=1
 
 format:
-    {{ runner }} exec eslint . --fix
-    {{ runner }} exec oxfmt .
-
-lint:
-    {{ runner }} exec eslint .
-
-test:
-    {{ runner }} run test
-
-typecheck:
-    {{ runner }} run typecheck
+    pnpm exec eslint . --fix
+    pnpm exec oxfmt .
