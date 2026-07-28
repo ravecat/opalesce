@@ -17,6 +17,7 @@
     "format": "eslint . --fix && oxfmt .",
     "format:check": "oxfmt --check .",
     "format.check": "pnpm run format:check",
+    "generate": "nx run @opalesce/cli:build && opalesce generate",
     "release": "semantic-release",
     "test": "pnpm run test:unit && pnpm run test:smoke",
     "test:unit": "vitest run --project unit",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@nx/js": "23.1.0",
+    "@opalesce/cli": "workspace:*",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/node": "^25.6.0",

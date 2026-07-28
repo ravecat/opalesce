@@ -20,6 +20,15 @@
   },
   "references": [
     {
+      "path": "./packages/cli"
+    },
+    {
+      "path": "./packages/config"
+    },
+    {
+      "path": "./packages/orchestrator"
+    },
+    {
       "path": "./packages/core"
     }
   ],

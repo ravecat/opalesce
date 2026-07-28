@@ -1,0 +1,26 @@
+{
+  "name": "@opalesce/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed project configuration for Opalesce",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test": "vitest run --config vitest.config.ts",
+    "check": "pnpm run typecheck && pnpm run test"
+  },
+  "dependencies": {
+    "@opalesce/orchestrator": "workspace:*"
+  }
+}

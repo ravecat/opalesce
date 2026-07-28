@@ -1,0 +1,23 @@
+{
+  "name": "@opalesce/cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Command-line generation facade for Opalesce",
+  "bin": {
+    "opalesce": "./bin/opalesce.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test": "vitest run --config vitest.config.ts",
+    "check": "pnpm run typecheck && pnpm run test"
+  },
+  "dependencies": {
+    "@opalesce/config": "workspace:*",
+    "@opalesce/orchestrator": "workspace:*"
+  }
+}
