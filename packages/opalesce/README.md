@@ -1,6 +1,6 @@
 # opalesce
 
-`opalesce` is the consumer-facing package for the Opalesce generation pipeline. It provides the project config API, plugin authoring contracts, programmatic pipeline access, and the `opalesce` executable through one base dependency.
+`opalesce` is the consumer-facing package for the Opalesce generation pipeline. It provides project configuration, plugin definition, and the `opalesce` executable through one base dependency.
 
 The package is published to the public npm registry as the recommended entry point for consumers.
 
@@ -64,25 +64,23 @@ Projects install concrete output plugins separately. They do not need direct dep
 
 ### `opalesce`
 
-Use the root for normal config files, plugin authoring, and programmatic pipelines:
+Use the root for project config files and plugin definition:
 
 ```ts
-import { defineConfig, definePipelineConfig, definePlugin, run } from "opalesce";
+import { defineConfig, definePlugin } from "opalesce";
 ```
 
 - `defineConfig` authors a path-based `opalesce.config.*` file.
 - `definePlugin` authors an orchestration plugin.
-- `definePipelineConfig` authors an in-memory pipeline config.
-- `run` runs the in-memory pipeline directly.
 
-The root also exports the public config, plugin, service, parser, artifact, result, context, and error types.
+The consumer facade does not expose the internal pipeline runner, parser, services, errors, or their types.
 
 ### `opalesce/config`
 
-Use the config-only entry when a config file wants the smallest explicit surface:
+Use the config-only entry when a config file needs only the config helper:
 
 ```ts
-import { defineConfig, type OpalesceConfig } from "opalesce/config";
+import { defineConfig } from "opalesce/config";
 ```
 
 ## Architecture

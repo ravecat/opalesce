@@ -1,14 +1,4 @@
-import {
-  createServiceToken,
-  defineConfig,
-  definePipelineConfig,
-  definePlugin,
-  run,
-  type Input,
-  type OpalesceConfig,
-  type PipelineConfig,
-  type ServiceToken,
-} from "../src/index.js";
+import { defineConfig, definePlugin } from "../src/index.js";
 import { defineConfig as defineConfigFromSubpath } from "../src/config.js";
 
 type Equal<Left, Right> =
@@ -18,9 +8,6 @@ type Equal<Left, Right> =
 
 type Expect<Value extends true> = Value;
 
-declare const input: Input;
-
-const token = createServiceToken<{ readonly value: string }>("facade-service");
 const plugin = definePlugin((options: { readonly path: string }) => ({
   name: "facade-plugin",
   build(context) {
@@ -46,33 +33,15 @@ const projectConfigFromSubpath = defineConfigFromSubpath({
   },
 });
 
-const pipelineConfig = definePipelineConfig({
-  input,
-  plugins: [plugin({ path: "version.txt" })],
-});
-
-const result = run(pipelineConfig);
-
 // @ts-expect-error Project config requires an output path.
 defineConfig({ input: "./asyncapi.yaml" });
 
-// @ts-expect-error Project config input is a filesystem path.
-defineConfig({ input, output: { path: "./generated" } });
-
 void projectConfig;
 void projectConfigFromSubpath;
-void result;
-void token;
 
-export type ConfigUsesProjectContract = Expect<
-  typeof projectConfig extends OpalesceConfig ? true : false
->;
-export type PipelineHelperUsesPipelineContract = Expect<
-  Equal<Parameters<typeof run>[0], PipelineConfig>
+export type ConfigInputLiteralIsPreserved = Expect<
+  Equal<typeof projectConfig.input, "./asyncapi.yaml">
 >;
 export type PluginOptionsArePreserved = Expect<
   Equal<Parameters<typeof plugin>, [{ readonly path: string }]>
->;
-export type ServiceTypeIsPreserved = Expect<
-  Equal<typeof token, ServiceToken<{ readonly value: string }>>
 >;

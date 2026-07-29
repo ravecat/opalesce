@@ -42,7 +42,7 @@ The CLI discovers the config, reads the input, calls `run` once, and writes succ
 Call `run` explicitly when another program already owns input loading and artifact persistence:
 
 ```ts
-import { definePipelineConfig, definePlugin, run, type Input } from "opalesce";
+import { defineConfig, definePlugin, run, type Input } from "@opalesce/core";
 
 const input = {
   asyncapi: "3.1.0",
@@ -62,7 +62,7 @@ const versionFile = definePlugin((options: { readonly path: string }) => ({
   },
 }));
 
-const config = definePipelineConfig({
+const config = defineConfig({
   input,
   plugins: [versionFile({ path: "metadata/version.txt" })],
 });
@@ -233,7 +233,7 @@ These failures use `PluginConfigurationError` and occur before Core parses the i
 Service tokens allow one plugin to provide a typed in-memory capability to another plugin without adding untyped fields to a global context.
 
 ```ts
-import { createServiceToken, definePipelineConfig, definePlugin, run } from "opalesce";
+import { createServiceToken, defineConfig, definePlugin, run } from "@opalesce/core";
 
 interface DocumentInfo {
   readonly asyncapiVersion: string;
@@ -264,7 +264,7 @@ const documentInfoFile = definePlugin(() => ({
 }));
 
 const result = await run(
-  definePipelineConfig({
+  defineConfig({
     input,
     plugins: [documentInfoFile(), documentInfoProvider()],
   }),
@@ -320,8 +320,12 @@ Core returns artifacts but does not write them. A facade or storage layer owns o
 ## Error Handling
 
 ```ts
-import { PluginConfigurationError, PluginExecutionError, run } from "opalesce";
-import { AsyncAPIParseError } from "@opalesce/core";
+import {
+  AsyncAPIParseError,
+  PluginConfigurationError,
+  PluginExecutionError,
+  run,
+} from "@opalesce/core";
 
 try {
   await run(config);

@@ -4,21 +4,10 @@ import * as facade from "../src/index.js";
 
 describe("facade exports", () => {
   it("exposes a deliberate root runtime API", () => {
-    expect(Object.keys(facade).sort()).toEqual([
-      "ArtifactError",
-      "PluginConfigurationError",
-      "PluginExecutionError",
-      "ServiceRegistryError",
-      "createServiceToken",
-      "defineConfig",
-      "definePipelineConfig",
-      "definePlugin",
-      "run",
-    ]);
-    expect("runPipeline" in facade).toBe(false);
+    expect(Object.keys(facade).sort()).toEqual(["defineConfig", "definePlugin"]);
   });
 
-  it("maps config and Core helpers without wrapping project config", () => {
+  it("maps project config without wrapping it", () => {
     expect(Object.keys(config)).toEqual(["defineConfig"]);
     expect(facade.defineConfig).toBe(config.defineConfig);
   });
