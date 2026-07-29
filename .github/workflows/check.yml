@@ -30,4 +30,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check workspace
-        run: pnpm run check:workspace
+        run: just check

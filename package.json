@@ -8,19 +8,6 @@
     "url": "git+https://github.com/ravecat/opalesce.git"
   },
   "type": "module",
-  "scripts": {
-    "build": "pnpm run build:workspace",
-    "build:workspace": "nx run-many -t build",
-    "check": "pnpm run lint && pnpm run format:check && pnpm run check:workspace",
-    "check:workspace": "nx run-many -t check --parallel=1",
-    "lint": "eslint .",
-    "format": "eslint . --fix && oxfmt .",
-    "format:check": "oxfmt --check .",
-    "format.check": "pnpm run format:check",
-    "generate": "nx run opalesce:build && opalesce generate",
-    "test": "nx run-many -t test --parallel=1",
-    "typecheck": "nx run-many -t typecheck"
-  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@nx/js": "23.1.0",
