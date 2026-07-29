@@ -15,6 +15,10 @@ generate +args:
     pnpm exec nx run opalesce:build
     @pnpm exec opalesce generate "$@"
 
+generate-smoke:
+    @just generate --config ./fixtures/generate-smoke/opalesce.config.ts
+    diff --recursive --unified ./fixtures/generate-smoke/expected ./fixtures/generate-smoke/generated
+
 check:
     pnpm exec eslint .
     pnpm exec oxfmt --check .

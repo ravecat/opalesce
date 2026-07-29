@@ -1,0 +1,16 @@
+asyncapi: 3.1.0
+info:
+  title: Opalesce generation smoke fixture
+  version: 1.0.0
+channels:
+  events:
+    address: events
+    messages:
+      Event:
+        payload:
+          type: object
+operations:
+  sendEvent:
+    action: send
+    channel:
+      $ref: "#/channels/events"
