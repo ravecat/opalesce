@@ -30,7 +30,7 @@
     },
     "check": {
       "cache": true,
-      "dependsOn": ["^build"]
+      "dependsOn": ["build"]
     },
     "typecheck": {
       "cache": true
