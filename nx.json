@@ -42,6 +42,42 @@
     },
     "format.check": {
       "cache": true
+    },
+    "nx-release-publish": {
+      "dependsOn": ["build"],
+      "options": {
+        "access": "public"
+      }
+    }
+  },
+  "release": {
+    "projects": ["packages/*"],
+    "projectsRelationship": "independent",
+    "releaseTag": {
+      "pattern": "{projectName}@{version}",
+      "requireSemver": true
+    },
+    "git": {
+      "commit": true,
+      "commitMessage": "chore(release): publish",
+      "tag": true
+    },
+    "version": {
+      "conventionalCommits": true,
+      "fallbackCurrentVersionResolver": "disk",
+      "updateDependents": "always",
+      "preserveLocalDependencyProtocols": true
+    },
+    "changelog": {
+      "automaticFromRef": true,
+      "projectChangelogs": {
+        "file": "{projectRoot}/CHANGELOG.md",
+        "replaceExistingContents": false,
+        "renderOptions": {
+          "authors": false
+        }
+      },
+      "workspaceChangelog": false
     }
   }
 }

@@ -1,0 +1,65 @@
+name: publish packages
+run-name: publish packages - ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-packages:
+    name: Release npm packages
+    runs-on: ubuntu-latest
+    if: github.ref_name == github.event.repository.default_branch
+    concurrency:
+      group: release-packages-${{ github.event.repository.default_branch }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      NPM_CONFIG_PROVENANCE: true
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    defaults:
+      run:
+        shell: nix develop --command bash --noprofile --norc -eo pipefail {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          filter: tree:0
+          persist-credentials: true
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v17
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+
+      - name: Set Git user
+        run: |
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git config user.name "${{ github.actor }}"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check workspace
+        run: just check
+
+      - name: Create release commit and tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pnpm exec nx release --skip-publish
+          git push --atomic --no-verify --follow-tags origin "HEAD:${{ github.event.repository.default_branch }}"
+
+      - name: Configure npm token for initial package creation
+        if: env.NPM_TOKEN != ''
+        run: npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN" --location=user
+
+      - name: Publish packages
+        run: pnpm exec nx release publish --outputStyle=static

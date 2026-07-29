@@ -1,14 +1,19 @@
 {
   "name": "opalesce",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.0.1",
   "description": "Consumer-facing package facade for Opalesce",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ravecat/opalesce.git",
+    "directory": "packages/opalesce"
+  },
   "bin": {
     "opalesce": "./bin/opalesce.js"
   },
   "files": [
     "bin",
-    "dist"
+    "dist",
+    "!dist/*.tsbuildinfo"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -22,6 +27,9 @@
       "types": "./dist/config.d.ts",
       "import": "./dist/config.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.check.json",

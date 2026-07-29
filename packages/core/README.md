@@ -2,7 +2,7 @@
 
 `@opalesce/core` is the in-memory AsyncAPI generation engine for Opalesce. It parses input once, resolves plugin dependencies, runs plugin lifecycle hooks, shares typed services, and collects generated text artifacts without writing files.
 
-The package is currently private and intended for use by other packages in this workspace. Normal consumers use the `opalesce` facade, while `@opalesce/config` and `@opalesce/cli` remain the focused config, filesystem, and command layers.
+The package is released as a focused building block for advanced integrations. Normal consumers use the `opalesce` facade, while `@opalesce/config` and `@opalesce/cli` remain the focused config, filesystem, and command layers.
 
 ## Project Workflow
 
@@ -101,7 +101,7 @@ Then refresh workspace links:
 pnpm install
 ```
 
-The scoped package is not currently published and is not a normal consumer dependency.
+The scoped package is not a normal consumer dependency; prefer the `opalesce` facade unless direct access to the engine is required.
 
 ## Pipeline Lifecycle
 
@@ -385,7 +385,7 @@ Those behaviors belong to config-loader, CLI, storage, schema, and output-plugin
 
 ## Prerequisites
 
-Workspace development uses Node.js 24 as declared by the repository Nix environment. The private package does not yet declare a public runtime support range.
+Workspace development uses Node.js 24 as declared by the repository Nix environment. The package does not yet declare a public runtime support range.
 
 Recommended:
 
@@ -398,24 +398,24 @@ The workspace pins pnpm through the root `packageManager` field. For manual setu
 
 ## Stack
 
-| Area                                      | Version source files                       |
-| ----------------------------------------- | ------------------------------------------ |
-| Runtime dependencies and package metadata | [`package.json`](./package.json)           |
-| Development environment                   | [`../../flake.nix`](../../flake.nix)       |
-| Workspace tooling and scripts             | [`../../package.json`](../../package.json) |
+| Area                                      | Version source files                 |
+| ----------------------------------------- | ------------------------------------ |
+| Runtime dependencies and package metadata | [`package.json`](./package.json)     |
+| Development environment                   | [`../../flake.nix`](../../flake.nix) |
+| Workspace command aliases                 | [`../../justfile`](../../justfile)   |
 
 ## Development Commands
 
 Run commands from the repository root:
 
-| Command                                  | Purpose                                                         |
-| ---------------------------------------- | --------------------------------------------------------------- |
-| `pnpm exec nx build @opalesce/core`      | Build ESM JavaScript and TypeScript declarations.               |
-| `pnpm --dir packages/core run typecheck` | Type-check package source and tests without emitting files.     |
-| `pnpm --dir packages/core run test`      | Run focused parser and orchestration runtime tests.             |
-| `pnpm exec nx run @opalesce/core:check`  | Build and verify the package, then run type-checking and tests. |
-| `pnpm run build:workspace`               | Build every Nx package project.                                 |
-| `pnpm run check:workspace`               | Run package checks across the Nx workspace.                     |
+| Command                                  | Purpose                                                     |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| `just nx build @opalesce/core`           | Build ESM JavaScript and TypeScript declarations.           |
+| `pnpm --dir packages/core run typecheck` | Type-check package source and tests without emitting files. |
+| `pnpm --dir packages/core run test`      | Run focused parser and orchestration runtime tests.         |
+| `just nx run @opalesce/core:check`       | Run package type-checking and tests.                        |
+| `just nx run-many -t build`              | Build every Nx package project.                             |
+| `just nx run-many -t check --parallel=1` | Run package checks across the Nx workspace.                 |
 
 The package tests cover parser option forwarding, lifecycle ordering, dependency validation, typed services, artifact validation, immutable results, package exports, and error propagation.
 

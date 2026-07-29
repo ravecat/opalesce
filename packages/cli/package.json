@@ -1,14 +1,19 @@
 {
   "name": "@opalesce/cli",
   "version": "0.0.0",
-  "private": true,
   "description": "Command-line generation facade for Opalesce",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ravecat/opalesce.git",
+    "directory": "packages/cli"
+  },
   "bin": {
     "opalesce": "./bin/opalesce.js"
   },
   "files": [
     "bin",
-    "dist"
+    "dist",
+    "!dist/*.tsbuildinfo"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -18,6 +23,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.check.json",

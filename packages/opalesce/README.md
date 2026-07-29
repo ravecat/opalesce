@@ -2,7 +2,7 @@
 
 `opalesce` is the consumer-facing package for the Opalesce generation pipeline. It provides the project config API, plugin authoring contracts, programmatic pipeline access, and the `opalesce` executable through one base dependency.
 
-The package is private while workspace boundaries and release ownership are being established. It is not yet available from the public npm registry.
+The package is published to the public npm registry as the recommended entry point for consumers.
 
 ## Quick Start
 
