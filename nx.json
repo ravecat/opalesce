@@ -79,5 +79,6 @@
       },
       "workspaceChangelog": false
     }
-  }
+  },
+  "analytics": false
 }

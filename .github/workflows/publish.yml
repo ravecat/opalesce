@@ -1,5 +1,5 @@
 name: publish packages
-run-name: publish packages - ${{ github.ref_name }}
+run-name: npm release - ${{ github.ref_name }}
 
 on:
   workflow_dispatch:
@@ -8,8 +8,40 @@ permissions:
   contents: read
 
 jobs:
+  preview-release:
+    name: Preview npm release
+    runs-on: ubuntu-latest
+    if: github.ref_name == github.event.repository.default_branch
+    defaults:
+      run:
+        shell: nix develop --command bash --noprofile --norc -eo pipefail {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          filter: tree:0
+          persist-credentials: false
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v17
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check workspace
+        run: just check
+
+      - name: Preview release
+        run: pnpm exec nx release --dry-run --skip-publish
+
   release-packages:
     name: Release npm packages
+    needs: preview-release
     runs-on: ubuntu-latest
     if: github.ref_name == github.event.repository.default_branch
     concurrency:
@@ -20,7 +52,6 @@ jobs:
       id-token: write
     env:
       NPM_CONFIG_PROVENANCE: true
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     defaults:
       run:
         shell: nix develop --command bash --noprofile --norc -eo pipefail {0}
@@ -28,7 +59,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           filter: tree:0
           persist-credentials: true
@@ -47,9 +78,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check workspace
-        run: just check
-
       - name: Create release commit and tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -58,8 +86,12 @@ jobs:
           git push --atomic --no-verify --follow-tags origin "HEAD:${{ github.event.repository.default_branch }}"
 
       - name: Configure npm token for initial package creation
-        if: env.NPM_TOKEN != ''
-        run: npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN" --location=user
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [[ -n "$NPM_TOKEN" ]]; then
+            npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN" --location=user
+          fi
 
       - name: Publish packages
         run: pnpm exec nx release publish --outputStyle=static
