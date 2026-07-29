@@ -2,6 +2,7 @@
   "name": "opalesce",
   "version": "0.0.1",
   "description": "Consumer-facing package facade for Opalesce",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ravecat/opalesce.git",

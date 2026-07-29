@@ -421,4 +421,4 @@ The package tests cover parser option forwarding, lifecycle ordering, dependency
 
 ## License
 
-No license has been declared yet.
+Licensed under the [MIT License](./LICENSE).

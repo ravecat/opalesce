@@ -2,6 +2,7 @@
   "name": "@opalesce/config",
   "version": "0.0.0",
   "description": "Typed project configuration for Opalesce",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ravecat/opalesce.git",

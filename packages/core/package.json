@@ -2,6 +2,7 @@
   "name": "@opalesce/core",
   "version": "0.0.0",
   "description": "AsyncAPI parsing and plugin orchestration engine for Opalesce",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ravecat/opalesce.git",

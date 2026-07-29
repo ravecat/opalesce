@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Opalesce workspace",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ravecat/opalesce.git"
