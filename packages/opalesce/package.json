@@ -1,6 +1,6 @@
 {
   "name": "opalesce",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Consumer-facing package facade for Opalesce",
   "license": "MIT",
   "repository": {

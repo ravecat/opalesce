@@ -1,6 +1,6 @@
 {
   "name": "@opalesce/core",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "AsyncAPI parsing and plugin orchestration engine for Opalesce",
   "license": "MIT",
   "repository": {
