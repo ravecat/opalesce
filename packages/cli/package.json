@@ -1,7 +1,22 @@
 {
   "name": "@opalesce/cli",
   "version": "0.0.1",
-  "description": "Command-line generation facade for Opalesce",
+  "description": "Generate code and other artifacts from AsyncAPI specifications through the Opalesce command-line interface.",
+  "keywords": [
+    "artifact-generator",
+    "asyncapi",
+    "asyncapi-generator",
+    "cli",
+    "code-generator",
+    "codegen",
+    "command-line",
+    "command-line-tool",
+    "event-driven-api",
+    "opalesce",
+    "plugin-system",
+    "plugins",
+    "typescript"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

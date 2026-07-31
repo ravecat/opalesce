@@ -1,7 +1,23 @@
 {
   "name": "@opalesce/core",
   "version": "0.0.1",
-  "description": "AsyncAPI parsing and plugin orchestration engine for Opalesce",
+  "description": "Transform AsyncAPI specifications into artifacts with Opalesce's plugin-based generation engine.",
+  "keywords": [
+    "artifact-generator",
+    "asyncapi",
+    "asyncapi-generator",
+    "code-generator",
+    "codegen",
+    "core-library",
+    "event-driven-api",
+    "event-driven-architecture",
+    "opalesce",
+    "plugin-framework",
+    "plugin-system",
+    "plugins",
+    "schema-parser",
+    "typescript"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

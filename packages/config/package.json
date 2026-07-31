@@ -1,7 +1,20 @@
 {
   "name": "@opalesce/config",
   "version": "0.0.1",
-  "description": "Typed project configuration for Opalesce",
+  "description": "Type-safe project configuration for generating artifacts from AsyncAPI specifications with Opalesce.",
+  "keywords": [
+    "artifact-generator",
+    "asyncapi",
+    "asyncapi-generator",
+    "code-generator",
+    "codegen",
+    "configuration",
+    "event-driven-api",
+    "opalesce",
+    "plugins",
+    "type-safe",
+    "typescript"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

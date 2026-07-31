@@ -1,7 +1,21 @@
 {
   "name": "opalesce",
   "version": "0.1.0",
-  "description": "Consumer-facing package facade for Opalesce",
+  "description": "Generate code and other artifacts from AsyncAPI specifications with a plugin-based toolkit.",
+  "keywords": [
+    "artifact-generator",
+    "asyncapi",
+    "asyncapi-generator",
+    "cli",
+    "code-generator",
+    "codegen",
+    "event-driven-api",
+    "event-driven-architecture",
+    "opalesce",
+    "plugin-system",
+    "plugins",
+    "typescript"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
