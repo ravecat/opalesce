@@ -73,7 +73,7 @@ import { defineConfig, definePlugin } from "opalesce";
 - `defineConfig` authors a path-based `opalesce.config.*` file.
 - `definePlugin` authors an orchestration plugin.
 
-The consumer facade does not expose the internal pipeline runner, parser, services, errors, or their types.
+The consumer facade does not expose the internal pipeline runner, parser, errors, or their types.
 
 ### `opalesce/config`
 

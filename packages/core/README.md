@@ -1,6 +1,6 @@
 # @opalesce/core
 
-`@opalesce/core` is the in-memory AsyncAPI generation engine for Opalesce. It parses input once, resolves plugin dependencies, runs plugin lifecycle hooks, shares typed services, and collects generated text artifacts without writing files.
+`@opalesce/core` is the in-memory AsyncAPI generation engine for Opalesce. It parses input once, runs each configured plugin in declared order, and collects generated text artifacts without writing files.
 
 The package is released as a focused building block for advanced integrations. Normal consumers use the `opalesce` facade, while `@opalesce/config` and `@opalesce/cli` remain the focused config, filesystem, and command layers.
 
@@ -72,7 +72,7 @@ const result = await run(config);
 console.log(result.artifacts);
 ```
 
-The result contains the official parsed AsyncAPI document, parser diagnostics, artifacts in emission order, and the resolved plugin order:
+The result contains the official parsed AsyncAPI document, parser diagnostics, artifacts in emission order, and the configured plugin order:
 
 ```ts
 interface PipelineResult {
@@ -107,14 +107,12 @@ The scoped package is not a normal consumer dependency; prefer the `opalesce` fa
 
 `run` executes one deterministic pipeline:
 
-1. Validate plugin names and dependency relationships.
-2. Resolve a stable topological plugin order.
-3. Parse `config.input` once.
-4. Run every plugin `setup` hook in resolved order.
-5. Run every plugin `build` hook in the same order.
-6. Return a frozen result with all in-memory artifacts.
+1. Snapshot `config.plugins` in declared order.
+2. Parse `config.input` once.
+3. Run and await each plugin `build` in declared order.
+4. Return a frozen result with all in-memory artifacts.
 
-Plugin configuration failures happen before parsing. Core parse failures pass through unchanged. A setup or build failure stops the pipeline immediately.
+Core parse failures pass through unchanged. A build failure stops the pipeline immediately, so later plugins do not run.
 
 ## Pipeline Configuration
 
@@ -130,7 +128,7 @@ interface PipelineConfig {
 | --------- | -------- | ------------------------------------------------------------------------------------------------------------ |
 | `input`   | Yes      | YAML or JSON text, a JavaScript AsyncAPI object, or an existing official AsyncAPI document accepted by Core. |
 | `parser`  | No       | Core parser-constructor and parse options forwarded unchanged to `parseAsyncAPI`.                            |
-| `plugins` | No       | Plugins to validate, order, and execute. Defaults to an empty pipeline.                                      |
+| `plugins` | No       | Plugins to execute sequentially in declared order. Defaults to an empty pipeline.                            |
 
 `defineConfig` is an identity helper. It preserves the concrete config type and improves TypeScript inference:
 
@@ -176,110 +174,39 @@ export const manifestPlugin = definePlugin((options: ManifestPluginOptions) => (
 }));
 ```
 
-A plugin can implement either or both lifecycle hooks:
+A plugin has one required execution hook:
 
 ```ts
 interface OrchestrationPlugin {
   readonly name: string;
-  readonly dependsOn?: readonly string[];
-  setup?(context: PluginSetupContext): void | Promise<void>;
-  build?(context: PluginBuildContext): void | Promise<void>;
+  build(context: PluginContext): void | Promise<void>;
 }
 ```
 
-- `setup` registers or consumes shared in-memory services.
-- `build` consumes services, inspects previously emitted artifacts, and emits new artifacts.
-- All setup hooks finish before the first build hook starts.
-- Hooks run sequentially. A hook can be synchronous or asynchronous.
+- `build` receives the parsed document and parser diagnostics and can emit artifacts.
+- Builds run sequentially in the exact order declared in `plugins`.
+- Core awaits an asynchronous build before starting the next plugin.
+- Each plugin derives and owns any generator-specific model it needs.
+- Plugins do not receive services or artifacts from other plugins.
 
-Plugin names must be non-empty and unique in one pipeline.
+The name identifies a plugin in results and execution errors. Repeated entries and repeated names are executed rather than deduplicated.
 
-## Plugin Dependencies
+## Linear Plugin Order
 
-Use `dependsOn` when a plugin requires another configured plugin:
+The config array is the complete execution plan:
 
 ```ts
-const provider = definePlugin(() => ({
-  name: "provider",
-  setup() {},
-}));
-
-const consumer = definePlugin(() => ({
-  name: "consumer",
-  dependsOn: ["provider"],
-  build() {},
-}));
-
 const config = defineConfig({
   input,
-  plugins: [consumer(), provider()],
+  plugins: [typescriptPlugin(), documentationPlugin(), metadataPlugin()],
 });
 ```
 
-The resolved order is `provider`, then `consumer`, even though the consumer appears first in the config. Config order breaks ties between plugins that are currently eligible to run.
-
-The runner rejects:
-
-- Empty plugin names.
-- Duplicate plugin names.
-- Missing dependencies.
-- Self dependencies.
-- Dependency cycles.
-
-These failures use `PluginConfigurationError` and occur before Core parses the input.
-
-## Sharing Typed Services
-
-Service tokens allow one plugin to provide a typed in-memory capability to another plugin without adding untyped fields to a global context.
-
-```ts
-import { createServiceToken, defineConfig, definePlugin, run } from "@opalesce/core";
-
-interface DocumentInfo {
-  readonly asyncapiVersion: string;
-}
-
-const documentInfoService = createServiceToken<DocumentInfo>("document-info");
-
-const documentInfoProvider = definePlugin(() => ({
-  name: "document-info-provider",
-  setup(context) {
-    context.provide(documentInfoService, {
-      asyncapiVersion: context.document.version(),
-    });
-  },
-}));
-
-const documentInfoFile = definePlugin(() => ({
-  name: "document-info-file",
-  dependsOn: ["document-info-provider"],
-  build(context) {
-    const documentInfo = context.get(documentInfoService);
-
-    context.emit({
-      path: "metadata/document.txt",
-      contents: `${documentInfo.asyncapiVersion}\n`,
-    });
-  },
-}));
-
-const result = await run(
-  defineConfig({
-    input,
-    plugins: [documentInfoFile(), documentInfoProvider()],
-  }),
-);
-```
-
-The generic token type controls both `provide` and `get`. Token identity, not the diagnostic name, selects the value, so two tokens with the same name remain independent.
-
-A token can be provided only once per pipeline. Retrieving an unavailable token or providing the same token twice raises `ServiceRegistryError` inside the active plugin hook.
-
-A future `@opalesce/schema` package can use this boundary to export a shared `ServiceToken<SchemaGraph>`.
+Core does not reorder plugins. If the same plugin instance appears twice, its `build` runs twice at those positions. Build contexts cannot observe earlier artifacts, so config order controls execution without creating a plugin dependency API.
 
 ## Emitting Artifacts
 
-Only build contexts expose `emit`:
+Build contexts expose `emit`:
 
 ```ts
 context.emit({
@@ -296,59 +223,33 @@ Artifact paths must:
 - Not be POSIX or Windows absolute paths.
 - Be unique across the complete pipeline.
 
-Artifacts are stored as defensive frozen copies. `context.artifacts` is a frozen snapshot of artifacts emitted so far, allowing a later plugin such as a barrel generator to inspect earlier output:
-
-```ts
-const barrelPlugin = definePlugin(() => ({
-  name: "barrel",
-  build(context) {
-    const modules = context.artifacts
-      .filter((artifact) => artifact.path.endsWith(".ts"))
-      .map((artifact) => `export * from "./${artifact.path}";`)
-      .join("\n");
-
-    context.emit({
-      path: "index.ts",
-      contents: `${modules}\n`,
-    });
-  },
-}));
-```
+Artifacts are stored as defensive frozen copies and become visible in `PipelineResult` after the complete run succeeds. A plugin cannot inspect artifacts emitted by another plugin. Outputs that must be coordinated, such as modules and their barrel file, belong to one plugin.
 
 Core returns artifacts but does not write them. A facade or storage layer owns output-directory resolution, atomic writes, cleanup, and rollback.
 
 ## Error Handling
 
 ```ts
-import {
-  AsyncAPIParseError,
-  PluginConfigurationError,
-  PluginExecutionError,
-  run,
-} from "@opalesce/core";
+import { AsyncAPIParseError, PluginExecutionError, run } from "@opalesce/core";
 
 try {
   await run(config);
 } catch (error) {
-  if (error instanceof PluginConfigurationError) {
-    console.error(error.code, error.pluginNames);
-  } else if (error instanceof AsyncAPIParseError) {
+  if (error instanceof AsyncAPIParseError) {
     console.error(error.diagnostics);
   } else if (error instanceof PluginExecutionError) {
-    console.error(error.pluginName, error.phase, error.cause);
+    console.error(error.pluginName, error.cause);
   } else {
     throw error;
   }
 }
 ```
 
-| Error                      | When it is raised                                                                                              |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `PluginConfigurationError` | Plugin names or dependency relationships are invalid. This error is not wrapped.                               |
-| `AsyncAPIParseError`       | Core cannot produce a valid AsyncAPI document. This error passes through unchanged.                            |
-| `PluginExecutionError`     | A setup or build hook fails. It contains `pluginName`, `phase`, and the original `cause`.                      |
-| `ServiceRegistryError`     | A hook retrieves a missing service or provides a token twice. It is available as `PluginExecutionError.cause`. |
-| `ArtifactError`            | A hook emits an invalid or colliding artifact path. It is available as `PluginExecutionError.cause`.           |
+| Error                  | When it is raised                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| `AsyncAPIParseError`   | Core cannot produce a valid AsyncAPI document. This error passes through unchanged.        |
+| `PluginExecutionError` | A build fails. It contains `pluginName` and the original `cause`.                          |
+| `ArtifactError`        | A build emits an invalid or colliding artifact path. It is a `PluginExecutionError.cause`. |
 
 The pipeline is fail-fast and returns no partial result after an error.
 
@@ -361,18 +262,20 @@ Runtime exports:
 - `defineConfig`
 - `definePlugin`
 - `run`
-- `createServiceToken`
-- `PluginConfigurationError`
 - `PluginExecutionError`
-- `ServiceRegistryError`
 - `ArtifactError`
 
-The root entry point also exports the parser, pipeline, plugin, context, service, artifact, and error-code types:
+The root entry point also exports parser, pipeline, plugin, context, artifact, and error-code types, including:
 
 - `Input`
 - `ParseAsyncAPIOptions`
 - `AsyncAPIDocumentInterface`
 - `Diagnostic`
+- `OrchestrationPlugin`
+- `PluginContext`
+- `PipelineConfig`
+- `PipelineResult`
+- `GeneratedArtifact`
 
 ## Current Boundaries
 
@@ -421,7 +324,7 @@ Run commands from the repository root:
 | `just nx run-many -t build`              | Build every Nx package project.                             |
 | `just nx run-many -t check --parallel=1` | Run package checks across the Nx workspace.                 |
 
-The package tests cover parser option forwarding, lifecycle ordering, dependency validation, typed services, artifact validation, immutable results, package exports, and error propagation.
+The package tests cover parser option forwarding, declared plugin order, sequential asynchronous builds, artifact validation, immutable results, package exports, and error propagation.
 
 ## License
 

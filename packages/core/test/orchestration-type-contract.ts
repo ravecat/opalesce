@@ -1,16 +1,15 @@
 import {
-  createServiceToken,
   defineConfig,
   definePlugin,
   run,
   type AsyncAPIDocumentInterface,
   type Diagnostic,
   type Input,
+  type OrchestrationPlugin,
   type ParseAsyncAPIOptions,
   type PipelineConfig,
   type PipelineResult,
-  type PluginBuildContext,
-  type PluginSetupContext,
+  type PluginContext,
 } from "../src/index.js";
 
 type Equal<Left, Right> =
@@ -20,19 +19,13 @@ type Equal<Left, Right> =
 
 type Expect<Value extends true> = Value;
 
-const token = createServiceToken<{ readonly id: string }>("typed-service");
-declare const setupContext: PluginSetupContext;
-declare const buildContext: PluginBuildContext;
+declare const pluginContext: PluginContext;
 declare const input: Input;
 
 const configuredPlugin = definePlugin((options: { readonly prefix: string }) => ({
   name: "typed-plugin",
-  setup(context: PluginSetupContext) {
-    context.provide(token, { id: options.prefix });
-  },
-  build(context: PluginBuildContext) {
-    const service = context.get(token);
-    context.emit({ path: "typed.txt", contents: service.id });
+  build(context: PluginContext) {
+    context.emit({ path: "typed.txt", contents: options.prefix });
   },
 }));
 
@@ -41,12 +34,12 @@ const config = defineConfig({
   plugins: [configuredPlugin({ prefix: "value" })],
 });
 
-const setupService = setupContext.get(token);
-const buildService = buildContext.get(token);
+const document = pluginContext.document;
+const diagnostics = pluginContext.diagnostics;
 
 void config;
-void setupService;
-void buildService;
+void document;
+void diagnostics;
 
 export type ConfigPreservesPluginList = Expect<
   Equal<typeof config.plugins, readonly [ReturnType<typeof configuredPlugin>]>
@@ -54,8 +47,10 @@ export type ConfigPreservesPluginList = Expect<
 export type PluginOptionsArePreserved = Expect<
   Equal<Parameters<typeof configuredPlugin>, [{ readonly prefix: string }]>
 >;
-export type SetupServiceIsTyped = Expect<Equal<typeof setupService, { readonly id: string }>>;
-export type BuildServiceIsTyped = Expect<Equal<typeof buildService, { readonly id: string }>>;
+export type PluginUsesSingleBuildHook = Expect<Equal<keyof OrchestrationPlugin, "name" | "build">>;
+export type ContextHasOnlyBuildInputs = Expect<
+  Equal<keyof PluginContext, "diagnostics" | "document" | "emit">
+>;
 export type ConfigUsesCoreInput = Expect<Equal<PipelineConfig["input"], Input>>;
 export type ConfigUsesCoreParserOptions = Expect<
   Equal<PipelineConfig["parser"], ParseAsyncAPIOptions | undefined>

@@ -2,21 +2,18 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   ArtifactError,
   AsyncAPIParseError,
-  createServiceToken,
   parseAsyncAPI,
-  PluginConfigurationError,
   PluginExecutionError,
   run,
-  ServiceRegistryError,
-  type GeneratedArtifact,
   type Input,
   type OrchestrationPlugin,
+  type PluginContext,
 } from "../src/index.js";
 
 const source: Input = {
   asyncapi: "3.1.0",
   info: {
-    title: "Orchestrator",
+    title: "Core pipeline",
     version: "1.0.0",
   },
 };
@@ -30,11 +27,7 @@ async function rejectionOf(promise: Promise<unknown>): Promise<unknown> {
   return promise.catch((error: unknown) => error);
 }
 
-function expectPluginCause(
-  rejection: unknown,
-  pluginName: string,
-  phase: "setup" | "build",
-): unknown {
+function expectPluginCause(rejection: unknown, pluginName: string): unknown {
   expect(rejection).toBeInstanceOf(PluginExecutionError);
 
   if (!(rejection instanceof PluginExecutionError)) {
@@ -42,7 +35,7 @@ function expectPluginCause(
   }
 
   expect(rejection.pluginName).toBe(pluginName);
-  expect(rejection.phase).toBe(phase);
+  expect("phase" in rejection).toBe(false);
   return rejection.cause;
 }
 
@@ -60,7 +53,7 @@ describe("run", () => {
     expect(Reflect.set(result.pluginNames, 0, "late")).toBe(false);
   });
 
-  it("preserves Core parse errors and runs no plugin hook", async () => {
+  it("preserves Core parse errors and runs no plugin build", async () => {
     const calls: string[] = [];
     const rejection = await rejectionOf(
       run({
@@ -68,9 +61,6 @@ describe("run", () => {
         plugins: [
           {
             name: "never",
-            setup() {
-              calls.push("setup");
-            },
             build() {
               calls.push("build");
             },
@@ -85,218 +75,127 @@ describe("run", () => {
   });
 });
 
-describe("plugin ordering", () => {
-  it("runs every setup before builds in stable dependency order", async () => {
+describe("linear plugin execution", () => {
+  it("runs every configured entry exactly once in declared order", async () => {
     const calls: string[] = [];
 
-    function plugin(name: string, dependsOn: readonly string[] = []): OrchestrationPlugin {
+    function plugin(name: string): OrchestrationPlugin {
       return {
         name,
-        dependsOn,
-        setup() {
-          calls.push(`setup:${name}`);
-        },
         build() {
-          calls.push(`build:${name}`);
+          calls.push(name);
         },
       };
     }
 
+    const repeated = plugin("second");
+    const result = await run({
+      input,
+      plugins: [repeated, plugin("first"), repeated],
+    });
+
+    expect(calls).toEqual(["second", "first", "second"]);
+    expect(result.pluginNames).toEqual(["second", "first", "second"]);
+  });
+
+  it("snapshots the configured entries before parsing and execution", async () => {
+    const calls: string[] = [];
+    const plugins: OrchestrationPlugin[] = [];
+    const latePlugin: OrchestrationPlugin = {
+      name: "late",
+      build() {
+        calls.push("late");
+      },
+    };
+
+    plugins.push({
+      name: "first",
+      build() {
+        calls.push("first");
+        plugins.push(latePlugin);
+      },
+    });
+
+    const result = await run({ input, plugins });
+
+    expect(calls).toEqual(["first"]);
+    expect(result.pluginNames).toEqual(["first"]);
+  });
+
+  it("provides the same parsed document and diagnostics to every build", async () => {
+    const contexts: PluginContext[] = [];
     const result = await run({
       input,
       plugins: [
-        plugin("consumer", ["provider"]),
-        plugin("independent"),
-        plugin("provider"),
-        plugin("last"),
-      ],
-    });
-
-    expect(result.pluginNames).toEqual(["independent", "provider", "consumer", "last"]);
-    expect(calls).toEqual([
-      "setup:independent",
-      "setup:provider",
-      "setup:consumer",
-      "setup:last",
-      "build:independent",
-      "build:provider",
-      "build:consumer",
-      "build:last",
-    ]);
-  });
-
-  it("allows setup-only and build-only plugins", async () => {
-    const calls: string[] = [];
-
-    await run({
-      input,
-      plugins: [
         {
-          name: "setup-only",
-          setup() {
-            calls.push("setup");
-          },
-        },
-        {
-          name: "build-only",
-          build() {
-            calls.push("build");
-          },
-        },
-      ],
-    });
-
-    expect(calls).toEqual(["setup", "build"]);
-  });
-
-  it.each([
-    {
-      name: "empty name",
-      plugins: [{ name: "   " }],
-      code: "empty-name",
-    },
-    {
-      name: "duplicate name",
-      plugins: [{ name: "duplicate" }, { name: "duplicate" }],
-      code: "duplicate-name",
-    },
-    {
-      name: "missing dependency",
-      plugins: [{ name: "consumer", dependsOn: ["missing"] }],
-      code: "missing-dependency",
-    },
-    {
-      name: "self dependency",
-      plugins: [{ name: "self", dependsOn: ["self"] }],
-      code: "dependency-cycle",
-    },
-    {
-      name: "dependency cycle",
-      plugins: [
-        { name: "first", dependsOn: ["second"] },
-        { name: "second", dependsOn: ["first"] },
-      ],
-      code: "dependency-cycle",
-    },
-  ] satisfies {
-    readonly name: string;
-    readonly plugins: readonly OrchestrationPlugin[];
-    readonly code: PluginConfigurationError["code"];
-  }[])("rejects $name before parsing", async ({ plugins, code }) => {
-    const rejection = await rejectionOf(
-      run({
-        input: "invalid input that Core must not parse",
-        plugins,
-      }),
-    );
-
-    expect(rejection).toBeInstanceOf(PluginConfigurationError);
-    expect(rejection).not.toBeInstanceOf(AsyncAPIParseError);
-
-    if (!(rejection instanceof PluginConfigurationError)) {
-      throw new Error("Expected PluginConfigurationError.");
-    }
-
-    expect(rejection.code).toBe(code);
-    expect(Object.isFrozen(rejection.pluginNames)).toBe(true);
-  });
-});
-
-describe("shared services", () => {
-  it("shares typed values by token identity and isolates equal token names", async () => {
-    const firstToken = createServiceToken<number>("value");
-    const secondToken = createServiceToken<string>("value");
-    const consumed: Array<number | string> = [];
-
-    await run({
-      input,
-      plugins: [
-        {
-          name: "provider",
-          setup(context) {
-            context.provide(firstToken, 42);
-            context.provide(secondToken, "second");
-          },
-        },
-        {
-          name: "consumer",
-          dependsOn: ["provider"],
-          setup(context) {
-            consumed.push(context.get(firstToken));
-          },
+          name: "first",
           build(context) {
-            consumed.push(context.get(secondToken));
+            contexts.push(context);
+          },
+        },
+        {
+          name: "second",
+          build(context) {
+            contexts.push(context);
           },
         },
       ],
     });
 
-    expect(consumed).toEqual([42, "second"]);
+    expect(contexts).toHaveLength(2);
+    expect(contexts.every((context) => context.document === result.document)).toBe(true);
+    expect(contexts.every((context) => context.diagnostics === result.diagnostics)).toBe(true);
+    expect(contexts.every((context) => Object.isFrozen(context))).toBe(true);
   });
 
-  it("wraps duplicate service provision with the provider context", async () => {
-    const token = createServiceToken<string>("schema");
-    const rejection = await rejectionOf(
-      run({
-        input,
-        plugins: [
-          {
-            name: "first-provider",
-            setup(context) {
-              context.provide(token, "first");
-            },
-          },
-          {
-            name: "second-provider",
-            setup(context) {
-              context.provide(token, "second");
-            },
-          },
-        ],
-      }),
-    );
-    const cause = expectPluginCause(rejection, "second-provider", "setup");
+  it("awaits an asynchronous build before starting the next plugin", async () => {
+    const calls: string[] = [];
+    let markFirstStarted: (() => void) | undefined;
+    let releaseFirst: (() => void) | undefined;
+    const firstStarted = new Promise<void>((resolve) => {
+      markFirstStarted = resolve;
+    });
+    const firstRelease = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
 
-    expect(cause).toBeInstanceOf(ServiceRegistryError);
-    if (!(cause instanceof ServiceRegistryError)) {
-      throw new Error("Expected ServiceRegistryError.");
-    }
-    expect(cause.code).toBe("duplicate-service");
-    expect(cause.serviceName).toBe("schema");
-  });
-
-  it("wraps missing service access with the consumer context", async () => {
-    const token = createServiceToken<string>("schema");
-    const rejection = await rejectionOf(
-      run({
-        input,
-        plugins: [
-          {
-            name: "consumer",
-            build(context) {
-              context.get(token);
-            },
+    const resultPromise = run({
+      input,
+      plugins: [
+        {
+          name: "first",
+          async build() {
+            calls.push("first:start");
+            markFirstStarted?.();
+            await firstRelease;
+            calls.push("first:end");
           },
-        ],
-      }),
-    );
-    const cause = expectPluginCause(rejection, "consumer", "build");
+        },
+        {
+          name: "second",
+          build() {
+            calls.push("second");
+          },
+        },
+      ],
+    });
 
-    expect(cause).toBeInstanceOf(ServiceRegistryError);
-    if (!(cause instanceof ServiceRegistryError)) {
-      throw new Error("Expected ServiceRegistryError.");
-    }
-    expect(cause.code).toBe("missing-service");
+    await firstStarted;
+    expect(calls).toEqual(["first:start"]);
+
+    releaseFirst?.();
+    await resultPromise;
+
+    expect(calls).toEqual(["first:start", "first:end", "second"]);
   });
 });
 
 describe("artifact collection", () => {
-  it("collects defensive frozen artifacts and exposes earlier snapshots", async () => {
+  it("collects defensive frozen artifacts in emission order", async () => {
     const first = {
       path: "types/First.ts",
       contents: "first",
     };
-    let observed: readonly GeneratedArtifact[] = [];
 
     const result = await run({
       input,
@@ -312,20 +211,17 @@ describe("artifact collection", () => {
         {
           name: "second",
           build(context) {
-            observed = context.artifacts;
             context.emit({ path: "types/Second.ts", contents: "second" });
           },
         },
       ],
     });
 
-    expect(observed).toEqual([{ path: "types/First.ts", contents: "first" }]);
-    expect(Object.isFrozen(observed)).toBe(true);
-    expect(Reflect.set(observed, 0, { path: "changed.ts", contents: "changed" })).toBe(false);
     expect(result.artifacts).toEqual([
       { path: "types/First.ts", contents: "first" },
       { path: "types/Second.ts", contents: "second" },
     ]);
+    expect(Object.isFrozen(result.artifacts)).toBe(true);
     expect(result.artifacts.every((artifact) => Object.isFrozen(artifact))).toBe(true);
   });
 
@@ -354,7 +250,7 @@ describe("artifact collection", () => {
         ],
       }),
     );
-    const cause = expectPluginCause(rejection, "invalid-artifact", "build");
+    const cause = expectPluginCause(rejection, "invalid-artifact");
 
     expect(cause).toBeInstanceOf(ArtifactError);
     if (!(cause instanceof ArtifactError)) {
@@ -384,7 +280,7 @@ describe("artifact collection", () => {
         ],
       }),
     );
-    const cause = expectPluginCause(rejection, "second", "build");
+    const cause = expectPluginCause(rejection, "second");
 
     expect(cause).toBeInstanceOf(ArtifactError);
     if (!(cause instanceof ArtifactError)) {
@@ -396,46 +292,31 @@ describe("artifact collection", () => {
 });
 
 describe("plugin failures", () => {
-  const phases: readonly ("setup" | "build")[] = ["setup", "build"];
-
-  it.each(phases)("retains the %s failure and stops later hooks", async (phase) => {
-    const failure = new Error(`${phase} failed`);
+  it("retains the build failure and stops later plugins", async () => {
+    const failure = new Error("build failed");
     const calls: string[] = [];
-    const failingPlugin: OrchestrationPlugin =
-      phase === "setup"
-        ? {
-            name: "failing",
-            setup() {
-              throw failure;
-            },
-          }
-        : {
-            name: "failing",
-            build() {
-              throw failure;
-            },
-          };
-
     const rejection = await rejectionOf(
       run({
         input,
         plugins: [
-          failingPlugin,
+          {
+            name: "failing",
+            build() {
+              throw failure;
+            },
+          },
           {
             name: "later",
-            setup() {
-              calls.push("later:setup");
-            },
             build() {
-              calls.push("later:build");
+              calls.push("later");
             },
           },
         ],
       }),
     );
-    const cause = expectPluginCause(rejection, "failing", phase);
+    const cause = expectPluginCause(rejection, "failing");
 
     expect(cause).toBe(failure);
-    expect(calls).toEqual(phase === "setup" ? [] : ["later:setup"]);
+    expect(calls).toEqual([]);
   });
 });

@@ -38,24 +38,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isStringArray(value: unknown): value is readonly string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
-}
-
 function isPlugin(value: unknown): value is OrchestrationPlugin {
-  if (!isRecord(value) || typeof value.name !== "string") {
+  if (!isRecord(value) || typeof value.name !== "string" || typeof value.build !== "function") {
     return false;
   }
 
-  if (value.dependsOn !== undefined && !isStringArray(value.dependsOn)) {
-    return false;
-  }
-
-  if (value.setup !== undefined && typeof value.setup !== "function") {
-    return false;
-  }
-
-  return value.build === undefined || typeof value.build === "function";
+  return !("setup" in value) && !("dependsOn" in value);
 }
 
 function isParserOptions(value: unknown): value is ParseAsyncAPIOptions {

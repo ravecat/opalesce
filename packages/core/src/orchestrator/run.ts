@@ -1,70 +1,31 @@
 import { parseAsyncAPI } from "../parseAsyncAPI.js";
 import { ArtifactStore } from "./artifacts.js";
 import { PluginExecutionError } from "./errors.js";
-import { orderPlugins } from "./orderPlugins.js";
-import { ServiceRegistry, type ServiceToken } from "./services.js";
-import type {
-  GeneratedArtifact,
-  PipelineConfig,
-  PipelineResult,
-  PluginBuildContext,
-  PluginExecutionPhase,
-  PluginSetupContext,
-} from "./types.js";
+import type { GeneratedArtifact, PipelineConfig, PipelineResult, PluginContext } from "./types.js";
 
-async function runHook(
-  pluginName: string,
-  phase: PluginExecutionPhase,
-  hook: () => void | Promise<void>,
-): Promise<void> {
+async function runBuild(pluginName: string, build: () => void | Promise<void>): Promise<void> {
   try {
-    await hook();
+    await build();
   } catch (cause) {
-    throw new PluginExecutionError(pluginName, phase, cause);
+    throw new PluginExecutionError(pluginName, cause);
   }
 }
 
 export async function run(config: PipelineConfig): Promise<PipelineResult> {
-  const plugins = orderPlugins(config.plugins ?? []);
+  const plugins = Object.freeze([...(config.plugins ?? [])]);
   const parsed = await parseAsyncAPI(config.input, config.parser);
-  const services = new ServiceRegistry();
   const artifacts = new ArtifactStore();
 
-  function get<T>(token: ServiceToken<T>): T {
-    return services.get(token);
-  }
-
-  const setupContext: PluginSetupContext = Object.freeze({
+  const context: PluginContext = Object.freeze({
     document: parsed.document,
     diagnostics: parsed.diagnostics,
-    get,
-    provide<T>(token: ServiceToken<T>, value: T): void {
-      services.provide(token, value);
-    },
-  });
-
-  const buildContext: PluginBuildContext = Object.freeze({
-    document: parsed.document,
-    diagnostics: parsed.diagnostics,
-    get,
-    get artifacts(): readonly GeneratedArtifact[] {
-      return artifacts.snapshot();
-    },
     emit(artifact: GeneratedArtifact): void {
       artifacts.emit(artifact);
     },
   });
 
   for (const plugin of plugins) {
-    if (plugin.setup !== undefined) {
-      await runHook(plugin.name, "setup", () => plugin.setup?.(setupContext));
-    }
-  }
-
-  for (const plugin of plugins) {
-    if (plugin.build !== undefined) {
-      await runHook(plugin.name, "build", () => plugin.build?.(buildContext));
-    }
+    await runBuild(plugin.name, () => plugin.build(context));
   }
 
   return Object.freeze({

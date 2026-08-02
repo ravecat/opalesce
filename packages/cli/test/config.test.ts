@@ -65,6 +65,41 @@ describe("config discovery", () => {
 });
 
 describe("config loading", () => {
+  it("accepts a plugin with one build hook", () => {
+    const plugin = {
+      name: "linear",
+      build() {},
+    };
+
+    expect(
+      validateConfig({
+        input: "./asyncapi.yaml",
+        output: { path: "./generated" },
+        plugins: [plugin],
+      }),
+    ).toMatchObject({ plugins: [plugin] });
+  });
+
+  it.each([
+    { name: "missing build", plugin: { name: "missing-build" } },
+    {
+      name: "legacy setup",
+      plugin: { name: "legacy-setup", setup() {}, build() {} },
+    },
+    {
+      name: "legacy dependency",
+      plugin: { name: "legacy-dependency", dependsOn: ["other"], build() {} },
+    },
+  ])("rejects a plugin with $name", ({ plugin }) => {
+    expect(() =>
+      validateConfig({
+        input: "./asyncapi.yaml",
+        output: { path: "./generated" },
+        plugins: [plugin],
+      }),
+    ).toThrow("plugins");
+  });
+
   it("loads an erasable TypeScript default export", async () => {
     const directory = await temporaryDirectory();
     const configPath = join(directory, "opalesce.config.ts");

@@ -1,0 +1,46 @@
+asyncapi: 3.1.0
+info:
+  title: Orders Events API
+  version: 1.0.0
+  description: Publishes order lifecycle events for downstream consumers.
+defaultContentType: application/json
+channels:
+  orderEvents:
+    address: orders.events
+    description: Order lifecycle events.
+    messages:
+      OrderCreated:
+        $ref: "#/components/messages/OrderCreated"
+operations:
+  publishOrderCreated:
+    action: send
+    summary: Publish an order-created event.
+    channel:
+      $ref: "#/channels/orderEvents"
+    messages:
+      - $ref: "#/channels/orderEvents/messages/OrderCreated"
+components:
+  messages:
+    OrderCreated:
+      name: OrderCreated
+      title: Order Created
+      summary: An order was created successfully.
+      payload:
+        $ref: "#/components/schemas/OrderCreatedPayload"
+  schemas:
+    OrderCreatedPayload:
+      type: object
+      required:
+        - orderId
+        - customerId
+        - createdAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
