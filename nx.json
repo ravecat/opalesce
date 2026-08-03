@@ -60,7 +60,7 @@
     },
     "git": {
       "commit": true,
-      "commitMessage": "chore(release): publish",
+      "commitMessage": "chore(release): publish packages",
       "tag": true
     },
     "version": {
