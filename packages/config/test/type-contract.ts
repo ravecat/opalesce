@@ -1,5 +1,5 @@
 import { definePlugin, type ParseAsyncAPIOptions } from "@opalesce/core";
-import { defineConfig, type OpalesceConfig, type OutputConfig } from "../src/index.js";
+import { type Config, defineConfig, type OutputConfig } from "../src/index.js";
 
 type Equal<Left, Right> =
   (<Value>() => Value extends Left ? 1 : 2) extends <Value>() => Value extends Right ? 1 : 2
@@ -37,6 +37,6 @@ export type ConfigPreservesPluginList = Expect<
 >;
 export type ConfigPreservesInputLiteral = Expect<Equal<typeof config.input, "./asyncapi.yaml">>;
 export type ConfigUsesParserOptions = Expect<
-  Equal<OpalesceConfig["parser"], ParseAsyncAPIOptions | undefined>
+  Equal<Config["parser"], ParseAsyncAPIOptions | undefined>
 >;
 export type OutputCleanIsOptional = Expect<Equal<OutputConfig["clean"], boolean | undefined>>;

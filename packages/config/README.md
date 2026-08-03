@@ -34,7 +34,7 @@ Config-declared input and output paths resolve from the config file directory. T
 ## Configuration
 
 ```ts
-interface OpalesceConfig {
+interface Config {
   readonly input: string;
   readonly output: {
     readonly path: string;

@@ -5,13 +5,13 @@ export interface OutputConfig {
   readonly clean?: boolean;
 }
 
-export interface OpalesceConfig {
+export interface Config {
   readonly input: string;
   readonly output: OutputConfig;
   readonly parser?: ParseAsyncAPIOptions;
   readonly plugins?: readonly OrchestrationPlugin[];
 }
 
-export function defineConfig<const TConfig extends OpalesceConfig>(config: TConfig): TConfig {
+export function defineConfig<const TConfig extends Config>(config: TConfig): TConfig {
   return config;
 }

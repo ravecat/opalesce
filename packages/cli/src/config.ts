@@ -1,7 +1,7 @@
 import { access, readdir } from "node:fs/promises";
 import { dirname, extname, parse, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { OpalesceConfig, OutputConfig } from "@opalesce/config";
+import type { Config, OutputConfig } from "@opalesce/config";
 import type { OrchestrationPlugin, ParseAsyncAPIOptions } from "@opalesce/core";
 
 export const CONFIG_CANDIDATES = [
@@ -31,7 +31,7 @@ export interface ResolvedConfig {
   readonly configDir: string;
   readonly inputPath: string;
   readonly outputPath: string;
-  readonly config: OpalesceConfig;
+  readonly config: Config;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -68,7 +68,7 @@ function validateOutput(value: unknown): OutputConfig {
     : { path: value.path, clean: value.clean };
 }
 
-export function validateConfig(value: unknown): OpalesceConfig {
+export function validateConfig(value: unknown): Config {
   if (!isRecord(value)) {
     throw new ConfigError("Config must default-export an object.");
   }
@@ -159,7 +159,7 @@ async function explicitConfigPath(cwd: string, configPath: string): Promise<stri
   return resolvedPath;
 }
 
-export async function loadConfig(configPath: string): Promise<OpalesceConfig> {
+export async function loadConfig(configPath: string): Promise<Config> {
   let imported: unknown;
 
   try {
