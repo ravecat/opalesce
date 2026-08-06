@@ -35,11 +35,11 @@ async function writeConfig(directory: string, input: string): Promise<string> {
   output: { path: "./generated", clean: true },
   plugins: [{
     name: "fixture",
-    build(context) {
-      context.emit({
+    generate(context) {
+      return [{
         path: "metadata/version.txt",
         contents: \`\${context.document.version()}\\n\`,
-      });
+      }];
     },
   }],
 };

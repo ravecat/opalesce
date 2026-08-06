@@ -49,11 +49,11 @@ describe("facade opalesce bin", () => {
 
 const metadata = definePlugin(() => ({
   name: "facade-bin-fixture",
-  build(context) {
-    context.emit({
+  generate(context) {
+    return [{
       path: "metadata/version.txt",
       contents: \`\${context.document.version()}\\n\`,
-    });
+    }];
   },
 }));
 

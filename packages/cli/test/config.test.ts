@@ -65,10 +65,12 @@ describe("config discovery", () => {
 });
 
 describe("config loading", () => {
-  it("accepts a plugin with one build hook", () => {
+  it("accepts a plugin with one generate hook", () => {
     const plugin = {
       name: "linear",
-      build() {},
+      generate() {
+        return [];
+      },
     };
 
     expect(
@@ -81,14 +83,15 @@ describe("config loading", () => {
   });
 
   it.each([
-    { name: "missing build", plugin: { name: "missing-build" } },
+    { name: "missing generate", plugin: { name: "missing-generate" } },
+    { name: "legacy build", plugin: { name: "legacy-build", build() {} } },
     {
       name: "legacy setup",
-      plugin: { name: "legacy-setup", setup() {}, build() {} },
+      plugin: { name: "legacy-setup", setup() {}, generate: () => [] },
     },
     {
       name: "legacy dependency",
-      plugin: { name: "legacy-dependency", dependsOn: ["other"], build() {} },
+      plugin: { name: "legacy-dependency", dependsOn: ["other"], generate: () => [] },
     },
   ])("rejects a plugin with $name", ({ plugin }) => {
     expect(() =>

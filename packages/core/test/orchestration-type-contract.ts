@@ -4,6 +4,7 @@ import {
   run,
   type AsyncAPIDocumentInterface,
   type Diagnostic,
+  type GeneratedArtifact,
   type Input,
   type OrchestrationPlugin,
   type ParseAsyncAPIOptions,
@@ -24,8 +25,8 @@ declare const input: Input;
 
 const configuredPlugin = definePlugin((options: { readonly prefix: string }) => ({
   name: "typed-plugin",
-  build(context: PluginContext) {
-    context.emit({ path: "typed.txt", contents: options.prefix });
+  generate() {
+    return [{ path: "typed.txt", contents: options.prefix }];
   },
 }));
 
@@ -47,9 +48,17 @@ export type ConfigPreservesPluginList = Expect<
 export type PluginOptionsArePreserved = Expect<
   Equal<Parameters<typeof configuredPlugin>, [{ readonly prefix: string }]>
 >;
-export type PluginUsesSingleBuildHook = Expect<Equal<keyof OrchestrationPlugin, "name" | "build">>;
-export type ContextHasOnlyBuildInputs = Expect<
-  Equal<keyof PluginContext, "diagnostics" | "document" | "emit">
+export type PluginUsesSingleGenerateHook = Expect<
+  Equal<keyof OrchestrationPlugin, "name" | "generate">
+>;
+export type ContextHasOnlyGenerateInputs = Expect<
+  Equal<keyof PluginContext, "diagnostics" | "document">
+>;
+export type PluginGenerateReturnsArtifacts = Expect<
+  Equal<
+    ReturnType<OrchestrationPlugin["generate"]>,
+    readonly GeneratedArtifact[] | Promise<readonly GeneratedArtifact[]>
+  >
 >;
 export type ConfigUsesCoreInput = Expect<Equal<PipelineConfig["input"], Input>>;
 export type ConfigUsesCoreParserOptions = Expect<

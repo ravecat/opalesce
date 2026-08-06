@@ -12,12 +12,13 @@ export interface GeneratedArtifact {
 export interface PluginContext {
   readonly document: AsyncAPIDocumentInterface;
   readonly diagnostics: readonly Diagnostic[];
-  emit(artifact: GeneratedArtifact): void;
 }
 
 export interface OrchestrationPlugin<TName extends string = string> {
   readonly name: TName;
-  build(context: PluginContext): void | Promise<void>;
+  generate(
+    context: PluginContext,
+  ): readonly GeneratedArtifact[] | Promise<readonly GeneratedArtifact[]>;
 }
 
 export interface PipelineConfig {

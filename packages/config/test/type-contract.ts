@@ -12,11 +12,13 @@ declare const parser: ParseAsyncAPIOptions;
 
 const plugin = definePlugin((options: { readonly prefix: string }) => ({
   name: "typed-config-plugin",
-  build(context) {
-    context.emit({
-      path: "typed.txt",
-      contents: options.prefix,
-    });
+  generate() {
+    return [
+      {
+        path: "typed.txt",
+        contents: options.prefix,
+      },
+    ];
   },
 }));
 

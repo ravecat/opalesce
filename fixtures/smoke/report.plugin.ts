@@ -17,37 +17,39 @@ export const report = definePlugin((options: AsyncAPIReportOptions) => ({
   name: "report",
 
   // Plugins run this hook sequentially in the order declared by the consuming config.
-  build({ document, diagnostics, emit }) {
+  generate({ document, diagnostics }) {
     // `document` is the parsed AsyncAPI model shared with every plugin in this run.
     const info = document.info();
 
-    // `emit` describes an artifact. Core collects it in memory and the CLI writes it later.
-    emit({
-      path: options.path,
-      contents: `${JSON.stringify(
-        {
-          title: info.title(),
-          apiVersion: info.version(),
-          asyncapiVersion: document.version(),
-          channels: document
-            .channels()
-            .all()
-            .map((channel) => ({
-              id: channel.id(),
-              address: channel.address() ?? null,
-            })),
-          operations: document
-            .operations()
-            .all()
-            .map((operation) => ({
-              id: operation.id() ?? null,
-              action: operation.action(),
-            })),
-          diagnosticCount: diagnostics.length,
-        },
-        null,
-        2,
-      )}\n`,
-    });
+    // Return final text artifacts. Core validates and collects them before the CLI writes files.
+    return [
+      {
+        path: options.path,
+        contents: `${JSON.stringify(
+          {
+            title: info.title(),
+            apiVersion: info.version(),
+            asyncapiVersion: document.version(),
+            channels: document
+              .channels()
+              .all()
+              .map((channel) => ({
+                id: channel.id(),
+                address: channel.address() ?? null,
+              })),
+            operations: document
+              .operations()
+              .all()
+              .map((operation) => ({
+                id: operation.id() ?? null,
+                action: operation.action(),
+              })),
+            diagnosticCount: diagnostics.length,
+          },
+          null,
+          2,
+        )}\n`,
+      },
+    ];
   },
 }));

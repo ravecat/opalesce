@@ -11,11 +11,13 @@ import { defineConfig, definePlugin } from "opalesce";
 
 const metadata = definePlugin(() => ({
   name: "metadata",
-  build(context) {
-    context.emit({
-      path: "metadata/version.txt",
-      contents: `${context.document.version()}\n`,
-    });
+  generate(context) {
+    return [
+      {
+        path: "metadata/version.txt",
+        contents: `${context.document.version()}\n`,
+      },
+    ];
   },
 }));
 

@@ -9,7 +9,7 @@ export class ArtifactError extends Error {
     super(
       code === "invalid-path"
         ? `Artifact path "${path}" must be a canonical relative path using forward slashes.`
-        : `Artifact path "${path}" has already been emitted.`,
+        : `Artifact path "${path}" has already been generated.`,
     );
     this.code = code;
     this.path = path;
