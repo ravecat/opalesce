@@ -1,11 +1,11 @@
 import { parseAsyncAPI } from "../parseAsyncAPI.js";
 import { ArtifactStore } from "./artifacts.js";
 import { PluginExecutionError } from "./errors.js";
-import type { GeneratedArtifact, PipelineConfig, PipelineResult, PluginContext } from "./types.js";
+import type { PipelineConfig, PipelineResult, PluginContext } from "./types.js";
 
-async function runBuild(pluginName: string, build: () => void | Promise<void>): Promise<void> {
+async function runPlugin(pluginName: string, generate: () => void | Promise<void>): Promise<void> {
   try {
-    await build();
+    await generate();
   } catch (cause) {
     throw new PluginExecutionError(pluginName, cause);
   }
@@ -19,13 +19,14 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   const context: PluginContext = Object.freeze({
     document: parsed.document,
     diagnostics: parsed.diagnostics,
-    emit(artifact: GeneratedArtifact): void {
-      artifacts.emit(artifact);
-    },
   });
 
   for (const plugin of plugins) {
-    await runBuild(plugin.name, () => plugin.build(context));
+    await runPlugin(plugin.name, async () => {
+      for (const artifact of await plugin.generate(context)) {
+        artifacts.add(artifact);
+      }
+    });
   }
 
   return Object.freeze({

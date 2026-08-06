@@ -10,11 +10,13 @@ type Expect<Value extends true> = Value;
 
 const plugin = definePlugin((options: { readonly path: string }) => ({
   name: "facade-plugin",
-  build(context) {
-    context.emit({
-      path: options.path,
-      contents: context.document.version(),
-    });
+  generate(context) {
+    return [
+      {
+        path: options.path,
+        contents: context.document.version(),
+      },
+    ];
   },
 }));
 

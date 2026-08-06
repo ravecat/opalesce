@@ -48,11 +48,11 @@ Paths in the config are relative to `fixtures/smoke`, not to the shell's current
 2. `AsyncAPIReportOptions` defines the plugin's user-facing options.
 3. `definePlugin` preserves the factory's option types and returns configured plugin instances.
 4. `name` gives the plugin a stable identity for results and errors.
-5. `build` receives the parsed document, parser diagnostics, and `emit`.
-6. `emit` declares a relative path and text contents without writing to the filesystem itself.
+5. `generate` receives the parsed document and parser diagnostics.
+6. `generate` returns relative artifact paths and their final text contents without writing to the filesystem itself.
 7. `opalesce.config.ts` imports the factory and instantiates the plugin with project options.
 
-The small surface is intentional. A plugin owns its transformation and emitted artifacts, while the CLI owns config loading, output cleanup, and filesystem writes.
+The small surface is intentional. A plugin owns its transformation and returned artifacts, while the CLI owns config loading, output cleanup, and filesystem writes.
 
 ## Turning the example into a reusable plugin
 
@@ -61,7 +61,7 @@ Keep a plugin beside its config while it serves one project. When it needs reuse
 - Move the factory and its options into a dedicated module or package.
 - Export the factory and its public option types from one documented entry point.
 - Keep the plugin name stable and make output paths configurable.
-- Add focused tests for emitted artifacts, invalid input, and build failures.
+- Add focused tests for returned artifacts, invalid input, and generation failures.
 - Document installation, a minimal config example, generated files, and supported options.
 
 This progression follows the same contributor-friendly shape used by Kubb: begin with a minimal typed plugin factory and config, then add package metadata, tests, and publishing concerns only when the plugin becomes reusable.

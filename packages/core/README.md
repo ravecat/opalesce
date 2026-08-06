@@ -14,11 +14,13 @@ import { defineConfig, definePlugin } from "opalesce";
 
 const versionFile = definePlugin(() => ({
   name: "version-file",
-  build(context) {
-    context.emit({
-      path: "metadata/version.txt",
-      contents: `AsyncAPI ${context.document.version()}\n`,
-    });
+  generate(context) {
+    return [
+      {
+        path: "metadata/version.txt",
+        contents: `AsyncAPI ${context.document.version()}\n`,
+      },
+    ];
   },
 }));
 
@@ -54,11 +56,13 @@ const input = {
 
 const versionFile = definePlugin((options: { readonly path: string }) => ({
   name: "version-file",
-  build(context) {
-    context.emit({
-      path: options.path,
-      contents: `AsyncAPI ${context.document.version()}\n`,
-    });
+  generate(context) {
+    return [
+      {
+        path: options.path,
+        contents: `AsyncAPI ${context.document.version()}\n`,
+      },
+    ];
   },
 }));
 
@@ -72,7 +76,7 @@ const result = await run(config);
 console.log(result.artifacts);
 ```
 
-The result contains the official parsed AsyncAPI document, parser diagnostics, artifacts in emission order, and the configured plugin order:
+The result contains the official parsed AsyncAPI document, parser diagnostics, artifacts in return order, and the configured plugin order:
 
 ```ts
 interface PipelineResult {
@@ -109,10 +113,10 @@ The scoped package is not a normal consumer dependency; prefer the `opalesce` fa
 
 1. Snapshot `config.plugins` in declared order.
 2. Parse `config.input` once.
-3. Run and await each plugin `build` in declared order.
+3. Run and await each plugin `generate` in declared order.
 4. Return a frozen result with all in-memory artifacts.
 
-Core parse failures pass through unchanged. A build failure stops the pipeline immediately, so later plugins do not run.
+Core parse failures pass through unchanged. A generation failure stops the pipeline immediately, so later plugins do not run.
 
 ## Pipeline Configuration
 
@@ -159,17 +163,19 @@ interface ManifestPluginOptions {
 
 export const manifestPlugin = definePlugin((options: ManifestPluginOptions) => ({
   name: "manifest",
-  build(context) {
-    context.emit({
-      path: options.path,
-      contents: JSON.stringify(
-        {
-          asyncapi: context.document.version(),
-        },
-        null,
-        2,
-      ),
-    });
+  generate(context) {
+    return [
+      {
+        path: options.path,
+        contents: JSON.stringify(
+          {
+            asyncapi: context.document.version(),
+          },
+          null,
+          2,
+        ),
+      },
+    ];
   },
 }));
 ```
@@ -179,13 +185,15 @@ A plugin has one required execution hook:
 ```ts
 interface OrchestrationPlugin {
   readonly name: string;
-  build(context: PluginContext): void | Promise<void>;
+  generate(
+    context: PluginContext,
+  ): readonly GeneratedArtifact[] | Promise<readonly GeneratedArtifact[]>;
 }
 ```
 
-- `build` receives the parsed document and parser diagnostics and can emit artifacts.
-- Builds run sequentially in the exact order declared in `plugins`.
-- Core awaits an asynchronous build before starting the next plugin.
+- `generate` receives the parsed document and parser diagnostics and returns text artifacts.
+- Plugin generations run sequentially in the exact order declared in `plugins`.
+- Core awaits asynchronous generation before starting the next plugin.
 - Each plugin derives and owns any generator-specific model it needs.
 - Plugins do not receive services or artifacts from other plugins.
 
@@ -202,17 +210,19 @@ const config = defineConfig({
 });
 ```
 
-Core does not reorder plugins. If the same plugin instance appears twice, its `build` runs twice at those positions. Build contexts cannot observe earlier artifacts, so config order controls execution without creating a plugin dependency API.
+Core does not reorder plugins. If the same plugin instance appears twice, its `generate` runs twice at those positions. Generation contexts cannot observe earlier artifacts, so config order controls execution without creating a plugin dependency API.
 
-## Emitting Artifacts
+## Returning Artifacts
 
-Build contexts expose `emit`:
+`generate` returns artifact descriptions:
 
 ```ts
-context.emit({
-  path: "types/UserCreated.ts",
-  contents: "export interface UserCreated {}\n",
-});
+return [
+  {
+    path: "types/UserCreated.ts",
+    contents: "export interface UserCreated {}\n",
+  },
+];
 ```
 
 Artifact paths must:
@@ -223,7 +233,7 @@ Artifact paths must:
 - Not be POSIX or Windows absolute paths.
 - Be unique across the complete pipeline.
 
-Artifacts are stored as defensive frozen copies and become visible in `PipelineResult` after the complete run succeeds. A plugin cannot inspect artifacts emitted by another plugin. Outputs that must be coordinated, such as modules and their barrel file, belong to one plugin.
+Artifacts are stored as defensive frozen copies and become visible in `PipelineResult` after the complete run succeeds. A plugin cannot inspect artifacts returned by another plugin. Outputs that must be coordinated, such as modules and their barrel file, belong to one plugin.
 
 Core returns artifacts but does not write them. A facade or storage layer owns output-directory resolution, atomic writes, cleanup, and rollback.
 
@@ -245,11 +255,11 @@ try {
 }
 ```
 
-| Error                  | When it is raised                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------ |
-| `AsyncAPIParseError`   | Core cannot produce a valid AsyncAPI document. This error passes through unchanged.        |
-| `PluginExecutionError` | A build fails. It contains `pluginName` and the original `cause`.                          |
-| `ArtifactError`        | A build emits an invalid or colliding artifact path. It is a `PluginExecutionError.cause`. |
+| Error                  | When it is raised                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| `AsyncAPIParseError`   | Core cannot produce a valid AsyncAPI document. This error passes through unchanged.           |
+| `PluginExecutionError` | Plugin generation fails. It contains `pluginName` and the original `cause`.                   |
+| `ArtifactError`        | A plugin returns an invalid or colliding artifact path. It is a `PluginExecutionError.cause`. |
 
 The pipeline is fail-fast and returns no partial result after an error.
 
@@ -324,7 +334,7 @@ Run commands from the repository root:
 | `just nx run-many -t build`              | Build every Nx package project.                             |
 | `just nx run-many -t check --parallel=1` | Run package checks across the Nx workspace.                 |
 
-The package tests cover parser option forwarding, declared plugin order, sequential asynchronous builds, artifact validation, immutable results, package exports, and error propagation.
+The package tests cover parser option forwarding, declared plugin order, sequential asynchronous generation, artifact validation, immutable results, package exports, and error propagation.
 
 ## License
 

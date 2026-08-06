@@ -24,11 +24,13 @@ import { defineConfig, definePlugin } from "opalesce";
 
 const metadata = definePlugin(() => ({
   name: "metadata",
-  build(context) {
-    context.emit({
-      path: "metadata/version.txt",
-      contents: `${context.document.version()}\n`,
-    });
+  generate(context) {
+    return [
+      {
+        path: "metadata/version.txt",
+        contents: `${context.document.version()}\n`,
+      },
+    ];
   },
 }));
 
@@ -100,7 +102,7 @@ Config files execute as trusted project code through Node.js 24 native JavaScrip
 
 The CLI waits for the complete in-memory pipeline to succeed before changing output.
 
-When `output.clean` is omitted or `false`, emitted paths are overwritten but stale and unrelated files remain. When `output.clean` is `true`, the CLI removes the old output directory only when it is a safe strict descendant of the config directory. It rejects the filesystem root, config directory, invocation directory, ancestors of the invocation directory, and paths outside the config directory.
+When `output.clean` is omitted or `false`, generated paths are overwritten but stale and unrelated files remain. When `output.clean` is `true`, the CLI removes the old output directory only when it is a safe strict descendant of the config directory. It rejects the filesystem root, config directory, invocation directory, ancestors of the invocation directory, and paths outside the config directory.
 
 Artifacts are written as UTF-8 text. A persistence error can leave a partial artifact set; atomic replacement is not part of the current command.
 

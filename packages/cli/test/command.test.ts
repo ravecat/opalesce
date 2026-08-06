@@ -101,8 +101,8 @@ describe("run", () => {
   output: { path: "./unused-output" },
   plugins: [{
     name: "command-fixture",
-    build(context) {
-      context.emit({ path: "value.txt", contents: "generated\\n" });
+    generate() {
+      return [{ path: "value.txt", contents: "generated\\n" }];
     },
   }],
 };

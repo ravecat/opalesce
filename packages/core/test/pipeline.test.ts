@@ -53,7 +53,7 @@ describe("run", () => {
     expect(Reflect.set(result.pluginNames, 0, "late")).toBe(false);
   });
 
-  it("preserves Core parse errors and runs no plugin build", async () => {
+  it("preserves Core parse errors and runs no plugin generation", async () => {
     const calls: string[] = [];
     const rejection = await rejectionOf(
       run({
@@ -61,8 +61,9 @@ describe("run", () => {
         plugins: [
           {
             name: "never",
-            build() {
-              calls.push("build");
+            generate() {
+              calls.push("generate");
+              return [];
             },
           },
         ],
@@ -82,8 +83,9 @@ describe("linear plugin execution", () => {
     function plugin(name: string): OrchestrationPlugin {
       return {
         name,
-        build() {
+        generate() {
           calls.push(name);
+          return [];
         },
       };
     }
@@ -103,16 +105,18 @@ describe("linear plugin execution", () => {
     const plugins: OrchestrationPlugin[] = [];
     const latePlugin: OrchestrationPlugin = {
       name: "late",
-      build() {
+      generate() {
         calls.push("late");
+        return [];
       },
     };
 
     plugins.push({
       name: "first",
-      build() {
+      generate() {
         calls.push("first");
         plugins.push(latePlugin);
+        return [];
       },
     });
 
@@ -122,21 +126,23 @@ describe("linear plugin execution", () => {
     expect(result.pluginNames).toEqual(["first"]);
   });
 
-  it("provides the same parsed document and diagnostics to every build", async () => {
+  it("provides the same parsed document and diagnostics to every generation", async () => {
     const contexts: PluginContext[] = [];
     const result = await run({
       input,
       plugins: [
         {
           name: "first",
-          build(context) {
+          generate(context) {
             contexts.push(context);
+            return [];
           },
         },
         {
           name: "second",
-          build(context) {
+          generate(context) {
             contexts.push(context);
+            return [];
           },
         },
       ],
@@ -148,7 +154,7 @@ describe("linear plugin execution", () => {
     expect(contexts.every((context) => Object.isFrozen(context))).toBe(true);
   });
 
-  it("awaits an asynchronous build before starting the next plugin", async () => {
+  it("awaits asynchronous generation before starting the next plugin", async () => {
     const calls: string[] = [];
     let markFirstStarted: (() => void) | undefined;
     let releaseFirst: (() => void) | undefined;
@@ -164,17 +170,19 @@ describe("linear plugin execution", () => {
       plugins: [
         {
           name: "first",
-          async build() {
+          async generate() {
             calls.push("first:start");
             markFirstStarted?.();
             await firstRelease;
             calls.push("first:end");
+            return [];
           },
         },
         {
           name: "second",
-          build() {
+          generate() {
             calls.push("second");
+            return [];
           },
         },
       ],
@@ -191,7 +199,7 @@ describe("linear plugin execution", () => {
 });
 
 describe("artifact collection", () => {
-  it("collects defensive frozen artifacts in emission order", async () => {
+  it("collects defensive frozen artifacts in plugin and return order", async () => {
     const first = {
       path: "types/First.ts",
       contents: "first",
@@ -202,23 +210,25 @@ describe("artifact collection", () => {
       plugins: [
         {
           name: "first",
-          build(context) {
-            context.emit(first);
-            first.path = "mutated.ts";
-            first.contents = "mutated";
+          generate() {
+            return [first, { path: "types/FirstExtra.ts", contents: "first-extra" }];
           },
         },
         {
           name: "second",
-          build(context) {
-            context.emit({ path: "types/Second.ts", contents: "second" });
+          generate() {
+            return [{ path: "types/Second.ts", contents: "second" }];
           },
         },
       ],
     });
 
+    first.path = "mutated.ts";
+    first.contents = "mutated";
+
     expect(result.artifacts).toEqual([
       { path: "types/First.ts", contents: "first" },
+      { path: "types/FirstExtra.ts", contents: "first-extra" },
       { path: "types/Second.ts", contents: "second" },
     ]);
     expect(Object.isFrozen(result.artifacts)).toBe(true);
@@ -243,8 +253,8 @@ describe("artifact collection", () => {
         plugins: [
           {
             name: "invalid-artifact",
-            build(context) {
-              context.emit({ path, contents: "invalid" });
+            generate() {
+              return [{ path, contents: "invalid" }];
             },
           },
         ],
@@ -267,14 +277,14 @@ describe("artifact collection", () => {
         plugins: [
           {
             name: "first",
-            build(context) {
-              context.emit({ path: "shared.ts", contents: "first" });
+            generate() {
+              return [{ path: "shared.ts", contents: "first" }];
             },
           },
           {
             name: "second",
-            build(context) {
-              context.emit({ path: "shared.ts", contents: "second" });
+            generate() {
+              return [{ path: "shared.ts", contents: "second" }];
             },
           },
         ],
@@ -292,8 +302,8 @@ describe("artifact collection", () => {
 });
 
 describe("plugin failures", () => {
-  it("retains the build failure and stops later plugins", async () => {
-    const failure = new Error("build failed");
+  it("retains the generation failure and stops later plugins", async () => {
+    const failure = new Error("generation failed");
     const calls: string[] = [];
     const rejection = await rejectionOf(
       run({
@@ -301,14 +311,15 @@ describe("plugin failures", () => {
         plugins: [
           {
             name: "failing",
-            build() {
+            generate() {
               throw failure;
             },
           },
           {
             name: "later",
-            build() {
+            generate() {
               calls.push("later");
+              return [];
             },
           },
         ],

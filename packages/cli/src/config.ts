@@ -39,11 +39,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isPlugin(value: unknown): value is OrchestrationPlugin {
-  if (!isRecord(value) || typeof value.name !== "string" || typeof value.build !== "function") {
+  if (!isRecord(value) || typeof value.name !== "string" || typeof value.generate !== "function") {
     return false;
   }
 
-  return !("setup" in value) && !("dependsOn" in value);
+  return !("build" in value) && !("setup" in value) && !("dependsOn" in value);
 }
 
 function isParserOptions(value: unknown): value is ParseAsyncAPIOptions {

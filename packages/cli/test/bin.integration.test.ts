@@ -55,11 +55,11 @@ describe("built opalesce bin", () => {
   output: { path: "./generated", clean: true },
   plugins: [{
     name: "built-bin-fixture",
-    build(context) {
-      context.emit({
+    generate(context) {
+      return [{
         path: "metadata/version.txt",
         contents: \`\${context.document.version()}\\n\`,
-      });
+      }];
     },
   }],
 };

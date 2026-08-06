@@ -21,7 +21,7 @@ export class ArtifactStore {
   private readonly artifacts: GeneratedArtifact[] = [];
   private readonly paths = new Set<string>();
 
-  emit(artifact: GeneratedArtifact): void {
+  add(artifact: GeneratedArtifact): void {
     if (!isCanonicalArtifactPath(artifact.path)) {
       throw new ArtifactError("invalid-path", artifact.path);
     }
