@@ -3,6 +3,7 @@ import {
   definePlugin,
   run,
   type AsyncAPIDocumentInterface,
+  type AsyncAPISource,
   type Diagnostic,
   type GeneratedArtifact,
   type Input,
@@ -37,10 +38,12 @@ const config = defineConfig({
 
 const document = pluginContext.document;
 const diagnostics = pluginContext.diagnostics;
+const sourceSnapshot = pluginContext.source;
 
 void config;
 void document;
 void diagnostics;
+void sourceSnapshot;
 
 export type ConfigPreservesPluginList = Expect<
   Equal<typeof config.plugins, readonly [ReturnType<typeof configuredPlugin>]>
@@ -52,7 +55,7 @@ export type PluginUsesSingleGenerateHook = Expect<
   Equal<keyof OrchestrationPlugin, "name" | "generate">
 >;
 export type ContextHasOnlyGenerateInputs = Expect<
-  Equal<keyof PluginContext, "diagnostics" | "document">
+  Equal<keyof PluginContext, "diagnostics" | "document" | "source">
 >;
 export type PluginGenerateReturnsArtifacts = Expect<
   Equal<
@@ -70,6 +73,12 @@ export type ResultUsesOfficialDocument = Expect<
 >;
 export type ResultUsesReadonlyDiagnostics = Expect<
   Equal<PipelineResult["diagnostics"], readonly Diagnostic[]>
+>;
+export type ContextUsesOptionalSource = Expect<
+  Equal<PluginContext["source"], AsyncAPISource | undefined>
+>;
+export type ResultUsesOptionalSource = Expect<
+  Equal<PipelineResult["source"], AsyncAPISource | undefined>
 >;
 export type ResultUsesReadonlyArtifacts = Expect<
   Equal<

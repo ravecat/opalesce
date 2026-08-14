@@ -4,6 +4,7 @@ import type {
   Input,
   ParseAsyncAPIOptions,
 } from "../parseAsyncAPI.js";
+import type { AsyncAPISource } from "../source.js";
 export interface GeneratedArtifact {
   readonly path: string;
   readonly contents: string;
@@ -12,6 +13,7 @@ export interface GeneratedArtifact {
 export interface PluginContext {
   readonly document: AsyncAPIDocumentInterface;
   readonly diagnostics: readonly Diagnostic[];
+  readonly source?: AsyncAPISource;
 }
 
 export interface OrchestrationPlugin<TName extends string = string> {
@@ -30,6 +32,7 @@ export interface PipelineConfig {
 export interface PipelineResult {
   readonly document: AsyncAPIDocumentInterface;
   readonly diagnostics: readonly Diagnostic[];
+  readonly source?: AsyncAPISource;
   readonly artifacts: readonly GeneratedArtifact[];
   readonly pluginNames: readonly string[];
 }

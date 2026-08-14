@@ -51,6 +51,7 @@ describe("run", () => {
     expect(Object.isFrozen(result.pluginNames)).toBe(true);
     expect(Reflect.set(result.artifacts, 0, { path: "late.txt", contents: "late" })).toBe(false);
     expect(Reflect.set(result.pluginNames, 0, "late")).toBe(false);
+    expect(result.source).toBeUndefined();
   });
 
   it("preserves Core parse errors and runs no plugin generation", async () => {
@@ -152,6 +153,40 @@ describe("linear plugin execution", () => {
     expect(contexts.every((context) => context.document === result.document)).toBe(true);
     expect(contexts.every((context) => context.diagnostics === result.diagnostics)).toBe(true);
     expect(contexts.every((context) => Object.isFrozen(context))).toBe(true);
+  });
+
+  it("shares one recursively immutable source with every plugin and the result", async () => {
+    const contexts: PluginContext[] = [];
+    const result = await run({
+      input: source,
+      plugins: [
+        {
+          name: "first",
+          generate(context) {
+            contexts.push(context);
+            return [];
+          },
+        },
+        {
+          name: "second",
+          generate(context) {
+            contexts.push(context);
+            return [];
+          },
+        },
+      ],
+    });
+
+    expect(result.source).toBeDefined();
+    expect(contexts).toHaveLength(2);
+    expect(contexts.every((context) => context.source === result.source)).toBe(true);
+    expect(Object.isFrozen(result.source)).toBe(true);
+    expect(Object.isFrozen(result.source?.data)).toBe(true);
+    const sourceData = result.source?.data;
+    if (typeof sourceData !== "object" || sourceData === null) {
+      throw new Error("Expected source data to be an object.");
+    }
+    expect(Reflect.set(sourceData, "asyncapi", "mutated")).toBe(false);
   });
 
   it("awaits asynchronous generation before starting the next plugin", async () => {

@@ -97,6 +97,8 @@ Config files execute as trusted project code through Node.js 24 native JavaScrip
 - Paths declared by `input` and `output.path` resolve from the config file directory.
 - Positional input and `--out` overrides resolve from the invocation directory.
 - The CLI normalizes paths to absolute values before reading or writing.
+- The CLI supplies the absolute input `file:` URL as `parser.parse.source`, so source-dependent plugins receive a stable URI for reference and identifier resolution.
+- An explicit `parser.parse.source` in project config remains authoritative.
 
 ## Output Behavior
 

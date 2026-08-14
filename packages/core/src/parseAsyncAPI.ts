@@ -6,12 +6,14 @@ import {
   type Input,
   type ParseOptions,
 } from "@asyncapi/parser";
+import { createAsyncAPISource, type AsyncAPISource } from "./source.js";
 
 export type { AsyncAPIDocumentInterface, Diagnostic, Input, ParseOptions } from "@asyncapi/parser";
 
 export interface ParsedAsyncAPI {
   readonly document: AsyncAPIDocumentInterface;
   readonly diagnostics: readonly Diagnostic[];
+  readonly source?: AsyncAPISource;
 }
 
 export type AsyncAPIParserOptions = NonNullable<ConstructorParameters<typeof Parser>[0]>;
@@ -52,5 +54,10 @@ export async function parseAsyncAPI(
   return {
     document: output.document,
     diagnostics: freezeDiagnostics(output.diagnostics),
+    ...(output.extras === undefined
+      ? {}
+      : {
+          source: createAsyncAPISource(output.extras.document.data, output.extras.document.source),
+        }),
   };
 }

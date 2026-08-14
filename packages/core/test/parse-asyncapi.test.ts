@@ -43,6 +43,32 @@ const asyncAPIObject = {
   },
 } satisfies Input;
 
+const schemaSource = {
+  asyncapi: "3.1.0",
+  info: {
+    title: "Core source snapshot",
+    version: "1.0.0",
+  },
+  components: {
+    schemas: {
+      AllowAll: {
+        schemaFormat: "application/schema+json;version=draft-07",
+        schema: true,
+      },
+      DenyAll: {
+        schemaFormat: "application/schema+json;version=draft-07",
+        schema: false,
+      },
+      Event: {
+        type: "object",
+        properties: {
+          related: { $ref: "#/components/schemas/Event" },
+        },
+      },
+    },
+  },
+} satisfies Input;
+
 async function fixture(version: "3.0" | "3.1"): Promise<string> {
   return readFile(new URL(`./fixtures/asyncapi-${version}.yaml`, import.meta.url), "utf8");
 }
@@ -99,6 +125,83 @@ describe("parseAsyncAPI", () => {
     expect(objectResult.document.version()).toBe("3.1.0");
   });
 
+  it("retains an immutable unresolved source snapshot", async () => {
+    const result = await parseAsyncAPI(schemaSource);
+
+    expect(result.source?.data).toMatchObject({
+      components: {
+        schemas: {
+          AllowAll: { schema: true },
+          DenyAll: { schema: false },
+          Event: {
+            properties: {
+              related: { $ref: "#/components/schemas/Event" },
+            },
+          },
+        },
+      },
+    });
+    expect(Object.isFrozen(result.source)).toBe(true);
+    expect(Object.isFrozen(result.source?.data)).toBe(true);
+  });
+
+  it("does not alias caller-owned object input", async () => {
+    const input = {
+      asyncapi: "3.1.0",
+      info: {
+        title: "Caller-owned input",
+        version: "1.0.0",
+      },
+      components: {
+        schemas: {
+          Event: {
+            type: "string",
+            description: "before",
+          },
+        },
+      },
+    } satisfies Input;
+    const result = await parseAsyncAPI(input);
+
+    input.components.schemas.Event.description = "after";
+
+    expect(result.source?.data).toMatchObject({
+      components: {
+        schemas: {
+          Event: { description: "before" },
+        },
+      },
+    });
+  });
+
+  it("retains a boolean schema inside a Draft 07 Multi Format wrapper", async () => {
+    const result = await parseAsyncAPI({
+      asyncapi: "3.1.0",
+      info: {
+        title: "Boolean wrapper",
+        version: "1.0.0",
+      },
+      components: {
+        schemas: {
+          Denied: {
+            schemaFormat: "application/schema+json;version=draft-07",
+            schema: false,
+          },
+        },
+      },
+    });
+
+    expect(result.source?.data).toMatchObject({
+      components: {
+        schemas: {
+          Denied: {
+            schema: false,
+          },
+        },
+      },
+    });
+  });
+
   it("accepts an existing official AsyncAPI document", async () => {
     const initial = await parseAsyncAPI(await fixture("3.1"));
     const reparsed = await parseAsyncAPI(initial.document);
@@ -106,6 +209,7 @@ describe("parseAsyncAPI", () => {
     expect(reparsed.document).toBe(initial.document);
     expect(reparsed.document.channels().has("events")).toBe(true);
     expect(reparsed.document.operations().has("sendEvent")).toBe(true);
+    expect(reparsed.source).toBeUndefined();
   });
 
   it("delegates external references to official resolver options", async () => {
@@ -177,11 +281,12 @@ describe("parseAsyncAPI", () => {
     const directory = await temporaryDirectory();
     const source = pathToFileURL(join(directory, "input.yaml")).href;
 
-    await parseAsyncAPI(await fixture("3.1"), { parse: { source } });
+    const result = await parseAsyncAPI(await fixture("3.1"), { parse: { source } });
     await expect(
       parseAsyncAPI("not an AsyncAPI document", { parse: { source } }),
     ).rejects.toBeInstanceOf(AsyncAPIParseError);
 
     expect(await readdir(fileURLToPath(new URL("./", source)))).toEqual([]);
+    expect(result.source?.uri).toBe(source);
   });
 });

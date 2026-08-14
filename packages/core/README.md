@@ -82,6 +82,7 @@ The result contains the official parsed AsyncAPI document, parser diagnostics, a
 interface PipelineResult {
   readonly document: AsyncAPIDocumentInterface;
   readonly diagnostics: readonly Diagnostic[];
+  readonly source?: AsyncAPISource;
   readonly artifacts: readonly GeneratedArtifact[];
   readonly pluginNames: readonly string[];
 }
@@ -191,11 +192,15 @@ interface OrchestrationPlugin {
 }
 ```
 
-- `generate` receives the parsed document and parser diagnostics and returns text artifacts.
+- `generate` receives the parsed document, parser diagnostics, and optional unresolved source snapshot and returns text artifacts.
 - Plugin generations run sequentially in the exact order declared in `plugins`.
 - Core awaits asynchronous generation before starting the next plugin.
 - Each plugin derives and owns any generator-specific model it needs.
 - Plugins do not receive services or artifacts from other plugins.
+
+For raw text and object inputs, `context.source.data` is an Opalesce-owned recursively frozen snapshot captured before parser reference resolution. It preserves authored `$ref` strings and boolean schemas instead of exposing the resolved, potentially cyclic parser model. `context.source.uri` contains `parse.source` when supplied. The same source identity is shared by every plugin and the pipeline result.
+
+When `input` is an existing `AsyncAPIDocumentInterface`, `source` is `undefined`. Core does not reconstruct purported authored input from `document.json()` because that model has already been resolved.
 
 The name identifies a plugin in results and execution errors. Repeated entries and repeated names are executed rather than deduplicated.
 
@@ -281,6 +286,8 @@ The root entry point also exports parser, pipeline, plugin, context, artifact, a
 - `ParseAsyncAPIOptions`
 - `AsyncAPIDocumentInterface`
 - `Diagnostic`
+- `AsyncAPISource`
+- `JsonValue`
 - `OrchestrationPlugin`
 - `PluginContext`
 - `PipelineConfig`

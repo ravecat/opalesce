@@ -19,3 +19,4 @@ export type {
   ParseOptions,
   ParsedAsyncAPI,
 } from "./parseAsyncAPI.js";
+export type { AsyncAPISource, JsonArray, JsonObject, JsonPrimitive, JsonValue } from "./source.js";

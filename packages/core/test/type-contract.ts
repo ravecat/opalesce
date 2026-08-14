@@ -2,8 +2,13 @@ import type { Parser } from "@asyncapi/parser";
 import type {
   AsyncAPIDocumentInterface,
   AsyncAPIParserOptions,
+  AsyncAPISource,
   Diagnostic,
   Input,
+  JsonArray,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
   ParseOptions,
   ParsedAsyncAPI,
 } from "../src/index.js";
@@ -27,4 +32,19 @@ export type ResultUsesReadonlyDiagnostics = Expect<
   Equal<ParsedAsyncAPI["diagnostics"], readonly Diagnostic[]>
 >;
 
-export type RootTypeExportsAreUsable = [Input, ParseOptions];
+export type ResultUsesOptionalSource = Expect<
+  Equal<ParsedAsyncAPI["source"], AsyncAPISource | undefined>
+>;
+
+export type SourceOnlyExposesPublicJsonData = Expect<Equal<keyof AsyncAPISource, "data" | "uri">>;
+
+export type JsonObjectValuesAreReadonly = Expect<Equal<JsonObject["field"], JsonValue>>;
+
+export type RootTypeExportsAreUsable = [
+  Input,
+  ParseOptions,
+  JsonArray,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
+];

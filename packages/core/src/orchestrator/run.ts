@@ -19,6 +19,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   const context: PluginContext = Object.freeze({
     document: parsed.document,
     diagnostics: parsed.diagnostics,
+    ...(parsed.source === undefined ? {} : { source: parsed.source }),
   });
 
   for (const plugin of plugins) {
@@ -32,6 +33,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   return Object.freeze({
     document: parsed.document,
     diagnostics: parsed.diagnostics,
+    ...(parsed.source === undefined ? {} : { source: parsed.source }),
     artifacts: artifacts.snapshot(),
     pluginNames: Object.freeze(plugins.map((plugin) => plugin.name)),
   });

@@ -1,5 +1,11 @@
 import { readFile } from "node:fs/promises";
-import { run, type Diagnostic, type PipelineConfig } from "@opalesce/core";
+import { pathToFileURL } from "node:url";
+import {
+  run,
+  type Diagnostic,
+  type ParseAsyncAPIOptions,
+  type PipelineConfig,
+} from "@opalesce/core";
 import { resolveConfig, type ResolveConfigOptions } from "./config.js";
 import { writeArtifacts } from "./output.js";
 
@@ -9,12 +15,25 @@ export interface GenerateResult {
   readonly outputPath: string;
 }
 
+export function parserOptionsForInput(
+  configured: ParseAsyncAPIOptions | undefined,
+  inputPath: string,
+): ParseAsyncAPIOptions {
+  return {
+    ...configured,
+    parse: {
+      ...configured?.parse,
+      source: configured?.parse?.source ?? pathToFileURL(inputPath).href,
+    },
+  };
+}
+
 export async function generate(options: ResolveConfigOptions): Promise<GenerateResult> {
   const resolved = await resolveConfig(options);
   const input = await readFile(resolved.inputPath, "utf8");
   const pipelineConfig: PipelineConfig = {
     input,
-    ...(resolved.config.parser === undefined ? {} : { parser: resolved.config.parser }),
+    parser: parserOptionsForInput(resolved.config.parser, resolved.inputPath),
     ...(resolved.config.plugins === undefined ? {} : { plugins: resolved.config.plugins }),
   };
   const result = await run(pipelineConfig);
