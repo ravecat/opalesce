@@ -1,0 +1,6 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.0.0",
+  "tags": ["version-3.0", "native", "annotations", "extensions", "ordering"],
+  "expected": { "kind": "success", "instances": [] }
+}

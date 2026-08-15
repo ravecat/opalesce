@@ -23,9 +23,6 @@ importers:
       nx:
         specifier: 23.1.0
         version: 23.1.0
-      opalesce:
-        specifier: workspace:*
-        version: link:packages/opalesce
       oxfmt:
         specifier: ^0.54.0
         version: 0.54.0
@@ -71,6 +68,25 @@ importers:
       '@opalesce/core':
         specifier: workspace:*
         version: link:../core
+
+  packages/plugin-json-schema:
+    dependencies:
+      '@opalesce/core':
+        specifier: workspace:*
+        version: link:../core
+      ajv:
+        specifier: ^8.18.0
+        version: 8.18.0
+      ajv-formats:
+        specifier: ^2.1.1
+        version: 2.1.1(ajv@8.18.0)
+    devDependencies:
+      '@opalesce/cli':
+        specifier: workspace:*
+        version: link:../cli
+      opalesce:
+        specifier: workspace:*
+        version: link:../opalesce
 
 packages:
 

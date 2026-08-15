@@ -1,0 +1,9 @@
+{
+  "asyncapi": "3.1.0",
+  "components": {
+    "schemas": {
+      "First": { "$id": "https://schemas.example.test/same.json", "type": "string" },
+      "Second": { "$id": "https://schemas.example.test/same.json", "type": "number" }
+    }
+  }
+}

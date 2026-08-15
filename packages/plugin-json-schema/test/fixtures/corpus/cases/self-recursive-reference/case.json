@@ -1,0 +1,12 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["version-3.1", "native", "self-recursive"],
+  "expected": {
+    "kind": "success",
+    "instances": [
+      { "definition": "Node", "file": "instances/node-valid.json", "valid": true },
+      { "definition": "Node", "file": "instances/node-invalid.json", "valid": false }
+    ]
+  }
+}

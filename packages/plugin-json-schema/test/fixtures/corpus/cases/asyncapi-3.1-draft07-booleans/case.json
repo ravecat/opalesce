@@ -1,0 +1,12 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["version-3.1", "draft-07-wrapper", "boolean-true", "boolean-false"],
+  "expected": {
+    "kind": "success",
+    "instances": [
+      { "definition": "Allow", "file": "instances/anything.json", "valid": true },
+      { "definition": "Deny", "file": "instances/anything.json", "valid": false }
+    ]
+  }
+}

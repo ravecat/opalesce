@@ -1,0 +1,10 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["relative-id"],
+  "expected": {
+    "kind": "error",
+    "code": "INVALID_SCHEMA_ID",
+    "sourcePointer": "/components/schemas/Event/$id"
+  }
+}

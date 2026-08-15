@@ -1,0 +1,7 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["source-unavailable"],
+  "sourceUnavailable": true,
+  "expected": { "kind": "error", "code": "SOURCE_UNAVAILABLE", "sourcePointer": "" }
+}

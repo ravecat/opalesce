@@ -1,0 +1,11 @@
+{
+  "asyncapi": "3.1.0",
+  "components": {
+    "schemas": {
+      "Event": {
+        "$id": "https://schemas.example.test/event.json",
+        "$ref": "#/components/schemas/Event"
+      }
+    }
+  }
+}

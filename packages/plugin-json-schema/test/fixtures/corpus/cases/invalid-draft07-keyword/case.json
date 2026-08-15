@@ -1,0 +1,10 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["invalid-json-schema"],
+  "expected": {
+    "kind": "error",
+    "code": "INVALID_JSON_SCHEMA",
+    "sourcePointer": "/components/schemas/Event/minLength"
+  }
+}

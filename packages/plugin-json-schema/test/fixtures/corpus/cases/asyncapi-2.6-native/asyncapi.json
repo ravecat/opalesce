@@ -1,0 +1,26 @@
+{
+  "asyncapi": "2.6.0",
+  "info": { "title": "AsyncAPI 2.6 components", "version": "1.0.0" },
+  "channels": {
+    "used": {
+      "publish": {
+        "message": { "payload": { "$ref": "#/components/schemas/Used" } }
+      }
+    },
+    "inline": {
+      "publish": {
+        "message": { "payload": { "type": "boolean" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Used": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      },
+      "Unused": { "type": "integer", "minimum": 0 }
+    }
+  }
+}

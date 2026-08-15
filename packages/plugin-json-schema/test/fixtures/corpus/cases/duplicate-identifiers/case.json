@@ -1,0 +1,10 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["duplicate-id"],
+  "expected": {
+    "kind": "error",
+    "code": "DUPLICATE_SCHEMA_ID",
+    "sourcePointer": "/components/schemas/Second/$id"
+  }
+}

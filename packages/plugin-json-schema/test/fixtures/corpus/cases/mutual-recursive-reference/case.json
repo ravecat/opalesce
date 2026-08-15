@@ -1,0 +1,14 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["version-3.1", "native", "mutual-recursive"],
+  "expected": {
+    "kind": "success",
+    "instances": [
+      { "definition": "Parent", "file": "instances/parent-valid.json", "valid": true },
+      { "definition": "Parent", "file": "instances/parent-invalid.json", "valid": false },
+      { "definition": "Child", "file": "instances/child-valid.json", "valid": true },
+      { "definition": "Child", "file": "instances/child-invalid.json", "valid": false }
+    ]
+  }
+}

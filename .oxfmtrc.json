@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["**/dist/**", ".nx/**"],
+  "ignorePatterns": [
+    "**/dist/**",
+    ".nx/**",
+    "packages/plugin-json-schema/test/fixtures/config/expected/**",
+    "packages/plugin-json-schema/test/fixtures/corpus/cases/*/expected/**"
+  ],
   "printWidth": 100,
   "tabWidth": 2,
   "useTabs": false

@@ -1,0 +1,4 @@
+{
+  "asyncapi": "3.1.0",
+  "components": { "schemas": { "Event": { "$id": "event.json", "type": "string" } } }
+}

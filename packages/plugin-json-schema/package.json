@@ -1,0 +1,50 @@
+{
+  "name": "@opalesce/plugin-json-schema",
+  "version": "0.0.1",
+  "description": "Generate deterministic JSON Schema Draft 07 bundles from AsyncAPI component schemas.",
+  "keywords": [
+    "asyncapi",
+    "codegen",
+    "event-driven-api",
+    "json-schema",
+    "opalesce",
+    "plugin",
+    "schema-generator"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ravecat/opalesce.git",
+    "directory": "packages/plugin-json-schema"
+  },
+  "files": [
+    "dist",
+    "!dist/*.tsbuildinfo"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test": "vitest run --config vitest.config.ts",
+    "check": "pnpm run typecheck && pnpm run test"
+  },
+  "dependencies": {
+    "@opalesce/core": "workspace:*",
+    "ajv": "^8.18.0",
+    "ajv-formats": "^2.1.1"
+  },
+  "devDependencies": {
+    "@opalesce/cli": "workspace:*",
+    "opalesce": "workspace:*"
+  }
+}

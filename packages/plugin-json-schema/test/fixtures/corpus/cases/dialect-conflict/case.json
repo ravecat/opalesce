@@ -1,0 +1,10 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["dialect-conflict"],
+  "expected": {
+    "kind": "error",
+    "code": "DIALECT_CONFLICT",
+    "sourcePointer": "/components/schemas/Event"
+  }
+}

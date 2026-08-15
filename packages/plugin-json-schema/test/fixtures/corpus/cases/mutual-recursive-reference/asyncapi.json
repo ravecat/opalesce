@@ -1,0 +1,21 @@
+{
+  "asyncapi": "3.1.0",
+  "info": { "title": "Mutual recursion", "version": "1.0.0" },
+  "components": {
+    "schemas": {
+      "Parent": {
+        "type": "object",
+        "required": ["child"],
+        "properties": { "child": { "$ref": "#/components/schemas/Child" } }
+      },
+      "Child": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "parent": { "$ref": "#/components/schemas/Parent" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Child": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "$ref": "#/definitions/Parent"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "Parent": {
+      "properties": {
+        "child": {
+          "$ref": "#/definitions/Child"
+        }
+      },
+      "required": [
+        "child"
+      ],
+      "type": "object"
+    }
+  }
+}

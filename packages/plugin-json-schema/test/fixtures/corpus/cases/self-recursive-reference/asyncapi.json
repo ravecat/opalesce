@@ -1,0 +1,16 @@
+{
+  "asyncapi": "3.1.0",
+  "info": { "title": "Self recursion", "version": "1.0.0" },
+  "components": {
+    "schemas": {
+      "Node": {
+        "type": "object",
+        "required": ["value"],
+        "properties": {
+          "value": { "type": "string" },
+          "next": { "$ref": "#/components/schemas/Node" }
+        }
+      }
+    }
+  }
+}

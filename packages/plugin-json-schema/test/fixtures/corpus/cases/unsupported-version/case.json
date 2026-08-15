@@ -1,0 +1,10 @@
+{
+  "input": "asyncapi.json",
+  "version": "2.5.0",
+  "tags": ["unsupported-version"],
+  "expected": {
+    "kind": "error",
+    "code": "UNSUPPORTED_ASYNCAPI_VERSION",
+    "sourcePointer": "/asyncapi"
+  }
+}

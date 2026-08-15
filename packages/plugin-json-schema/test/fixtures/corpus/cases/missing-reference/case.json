@@ -1,0 +1,10 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["missing-ref"],
+  "expected": {
+    "kind": "error",
+    "code": "UNRESOLVED_REFERENCE",
+    "sourcePointer": "/components/schemas/Event/$ref"
+  }
+}

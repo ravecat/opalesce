@@ -1,0 +1,21 @@
+{
+  "info": { "version": "1.0.0", "title": "AsyncAPI 3.0 ordering" },
+  "components": {
+    "schemas": {
+      "Event": {
+        "x-parser-schema-id": "remove-me",
+        "x-domain": { "owner": "catalog" },
+        "type": "object",
+        "examples": [{ "second": 2, "first": 1 }],
+        "externalDocs": { "url": "https://docs.example.test/events" },
+        "description": "Catalog event",
+        "deprecated": false,
+        "properties": {
+          "sequence": { "type": "integer", "format": "int64" },
+          "kind": { "type": "string", "enum": ["created", "deleted"] }
+        }
+      }
+    }
+  },
+  "asyncapi": "3.0.0"
+}

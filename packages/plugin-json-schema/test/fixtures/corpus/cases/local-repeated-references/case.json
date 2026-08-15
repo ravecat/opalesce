@@ -1,0 +1,22 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["version-3.1", "native", "local-ref", "repeated-ref"],
+  "expected": {
+    "kind": "success",
+    "instances": [
+      { "definition": "User", "file": "instances/user-valid.json", "valid": true },
+      { "definition": "User", "file": "instances/user-invalid.json", "valid": false },
+      {
+        "definition": "Envelope",
+        "file": "instances/envelope-valid.json",
+        "valid": true
+      },
+      {
+        "definition": "Envelope",
+        "file": "instances/envelope-invalid.json",
+        "valid": false
+      }
+    ]
+  }
+}

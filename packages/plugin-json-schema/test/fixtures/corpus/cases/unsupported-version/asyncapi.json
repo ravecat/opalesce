@@ -1,0 +1,4 @@
+{
+  "asyncapi": "2.5.0",
+  "components": { "schemas": { "Event": { "type": "string" } } }
+}

@@ -1,0 +1,14 @@
+{
+  "input": "asyncapi.json",
+  "version": "2.6.0",
+  "tags": ["version-2.6", "native", "unused-component", "inline-payload"],
+  "expected": {
+    "kind": "success",
+    "instances": [
+      { "definition": "Used", "file": "instances/used-valid.json", "valid": true },
+      { "definition": "Used", "file": "instances/used-invalid.json", "valid": false },
+      { "definition": "Unused", "file": "instances/unused-valid.json", "valid": true },
+      { "definition": "Unused", "file": "instances/unused-invalid.json", "valid": false }
+    ]
+  }
+}

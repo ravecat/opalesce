@@ -9,14 +9,6 @@ setup:
 nx +args:
     @pnpm exec nx "$@"
 
-# Run the teaching fixture against the freshly built local CLI and facade packages.
-# Additional arguments are forwarded to `opalesce generate` unchanged.
-[no-exit-message]
-[positional-arguments]
-generate *args:
-    pnpm exec nx run opalesce:build
-    @pnpm exec opalesce generate --config ./fixtures/smoke/opalesce.config.ts "$@"
-
 check:
     pnpm exec eslint .
     pnpm exec oxfmt --check .

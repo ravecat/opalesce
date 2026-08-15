@@ -1,0 +1,17 @@
+{
+  "asyncapi": "3.1.0",
+  "info": { "title": "Absolute identifiers", "version": "1.0.0" },
+  "components": {
+    "schemas": {
+      "First": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://schemas.example.test/first.json",
+        "type": "string"
+      },
+      "Second": {
+        "$id": "https://schemas.example.test/second.json",
+        "type": "integer"
+      }
+    }
+  }
+}
