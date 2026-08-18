@@ -1,8 +1,8 @@
 import type { OrchestrationPlugin, PluginContext } from "@opalesce/core";
-import { buildBundle } from "./bundle.js";
 import { JsonSchemaGenerationError } from "./errors.js";
+import { buildOutput } from "./output.js";
 import { stableJson } from "./serialize.js";
-import { validateBundle } from "./validate.js";
+import { validateOutput } from "./validate.js";
 
 export default function jsonSchema(
   options: {
@@ -20,14 +20,19 @@ export default function jsonSchema(
         );
       }
 
-      const bundle = buildBundle(context.source);
-      validateBundle(bundle);
+      const output = buildOutput(context.source);
+      validateOutput(output);
+      const outputPath = options.outputPath ?? "schemas";
 
       return [
         {
-          path: options.outputPath ?? "schemas.json",
-          contents: stableJson(bundle.document),
+          path: `${outputPath}/index.schema.json`,
+          contents: stableJson(output.index),
         },
+        ...output.components.map((component) => ({
+          path: `${outputPath}/${component.filename}`,
+          contents: stableJson(component.document),
+        })),
       ];
     },
   };

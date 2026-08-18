@@ -1,0 +1,5 @@
+{
+  "$id": "https://schemas.example.test/first.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "string"
+}

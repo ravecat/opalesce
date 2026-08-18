@@ -42,35 +42,38 @@ function pluginCause(error: unknown): unknown {
 }
 
 describe("jsonSchema", () => {
-  it("generates one Draft 07 bundle with default options", async () => {
+  it("generates one index and one standalone component with default options", async () => {
     const result = await run({ input, plugins: [jsonSchema()] });
 
     expect(result.pluginNames).toEqual(["json-schema"]);
-    expect(result.artifacts).toHaveLength(1);
-    expect(result.artifacts[0]?.path).toBe("schemas.json");
+    expect(result.artifacts.map(({ path }) => path)).toEqual([
+      "schemas/index.schema.json",
+      "schemas/Event.schema.json",
+    ]);
     expect(JSON.parse(result.artifacts[0]?.contents ?? "")).toEqual({
       $schema: "http://json-schema.org/draft-07/schema#",
-      definitions: {
-        Event: {
-          properties: {
-            id: { type: "string" },
-          },
-          required: ["id"],
-          type: "object",
-        },
-      },
+      definitions: { Event: { $ref: "./Event.schema.json" } },
     });
-    expect(result.artifacts[0]?.contents.endsWith("\n")).toBe(true);
+    expect(JSON.parse(result.artifacts[1]?.contents ?? "")).toEqual({
+      $schema: "http://json-schema.org/draft-07/schema#",
+      properties: { id: { type: "string" } },
+      required: ["id"],
+      type: "object",
+    });
+    expect(result.artifacts.every(({ contents }) => contents.endsWith("\n"))).toBe(true);
   });
 
-  it("uses the configured output path", async () => {
+  it("uses the configured output directory", async () => {
     const result = await run({
       input,
-      plugins: [jsonSchema({ outputPath: "contracts/events.schema.json" })],
+      plugins: [jsonSchema({ outputPath: "contracts/schemas" })],
     });
 
-    expect(result.artifacts[0]?.path).toBe("contracts/events.schema.json");
-    expect(JSON.parse(result.artifacts[0]?.contents ?? "")).not.toHaveProperty("$id");
+    expect(result.artifacts.map(({ path }) => path)).toEqual([
+      "contracts/schemas/index.schema.json",
+      "contracts/schemas/Event.schema.json",
+    ]);
+    expect(JSON.parse(result.artifacts[1]?.contents ?? "")).not.toHaveProperty("$id");
   });
 
   it("preserves internal generation failures as the Core plugin cause", async () => {
@@ -86,7 +89,7 @@ describe("jsonSchema", () => {
     expect(cause.sourcePointer).toBe("");
   });
 
-  it("returns no artifact when bundle validation fails", async () => {
+  it("returns no artifact when resource validation fails", async () => {
     const error = await rejectionOf(
       run({
         input: {
@@ -111,7 +114,7 @@ describe("jsonSchema", () => {
 
   it("leaves configured output path enforcement to Core", async () => {
     const error = await rejectionOf(
-      run({ input, plugins: [jsonSchema({ outputPath: "../schemas.json" })] }),
+      run({ input, plugins: [jsonSchema({ outputPath: "../schemas" })] }),
     );
     const cause = pluginCause(error);
 

@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 import type { JsonObject, JsonValue } from "@opalesce/core";
 import { parseAsyncAPI, run } from "@opalesce/core";
-import Ajv from "ajv";
+import Ajv, { type AnySchema } from "ajv";
 import addFormats from "ajv-formats";
 import { describe, expect, it } from "vitest";
-import { escapePointerToken } from "../src/bundle.js";
+import { escapePointerToken } from "../src/output.js";
 import { JsonSchemaGenerationError } from "../src/errors.js";
 import jsonSchema from "../src/index.js";
 import { assertCorpusFiles, caseFileUrl, loadCorpus, type CorpusCase } from "./corpus.js";
@@ -22,11 +22,14 @@ const REQUIRED_TAGS: readonly string[] = [
   "http-ref",
   "identifier-scoped-ref",
   "identifiers",
+  "index",
   "inline-payload",
   "invalid-json-schema",
+  "invalid-name",
   "local-ref",
   "missing-ref",
   "mutual-recursive",
+  "name-collision",
   "native",
   "ordering",
   "out-of-scope-ref",
@@ -90,19 +93,30 @@ async function pipelineArtifacts(corpusCase: CorpusCase) {
   return result.artifacts;
 }
 
-async function expectInstances(corpusCase: CorpusCase, contents: string): Promise<void> {
+async function expectInstances(
+  corpusCase: CorpusCase,
+  artifacts: readonly { readonly path: string; readonly contents: string }[],
+): Promise<void> {
   if (corpusCase.expected.kind !== "success") {
     return;
   }
 
-  const schemaUri = `urn:opalesce:corpus:${corpusCase.id}`;
+  const schemaRoot = `https://opalesce.invalid/corpus/${corpusCase.id}/`;
   const ajv = new Ajv({ strict: false });
   addFormats(ajv);
-  ajv.addSchema(jsonObject(JSON.parse(contents) as unknown), schemaUri);
+  for (const artifact of artifacts) {
+    const document = jsonValue(JSON.parse(artifact.contents) as unknown);
+    if (typeof document !== "boolean" && !isJsonObject(document)) {
+      throw new TypeError(`Artifact "${artifact.path}" is not a JSON Schema document.`);
+    }
+    ajv.addSchema(document as AnySchema, new URL(artifact.path, schemaRoot).href);
+  }
+
+  const indexUri = new URL("schemas/index.schema.json", schemaRoot).href;
 
   for (const expectation of corpusCase.expected.instances) {
     const validate = ajv.getSchema(
-      `${schemaUri}#/definitions/${escapePointerToken(expectation.definition)}`,
+      `${indexUri}#/definitions/${escapePointerToken(expectation.definition)}`,
     );
     if (validate === undefined) {
       throw new Error(
@@ -213,10 +227,6 @@ describe("JSON Schema output conformance corpus", () => {
     expect(actualArtifacts).toEqual(expectedArtifacts);
     expect(await pipelineArtifacts(corpusCase)).toEqual(actualArtifacts);
 
-    const artifact = actualArtifacts.find(({ path }) => path === "schemas.json");
-    if (artifact === undefined) {
-      throw new Error(`Corpus case "${corpusCase.id}" returned no schemas.json artifact.`);
-    }
-    await expectInstances(corpusCase, artifact.contents);
+    await expectInstances(corpusCase, actualArtifacts);
   });
 });

@@ -9,7 +9,7 @@ type Expect<Value extends true> = Value;
 
 const defaultPlugin = jsonSchema();
 const configuredPlugin = jsonSchema({
-  outputPath: "contracts/events.schema.json",
+  outputPath: "contracts/schemas",
 });
 
 void defaultPlugin;

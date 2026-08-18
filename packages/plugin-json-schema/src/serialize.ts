@@ -28,6 +28,6 @@ function sortJsonValue(value: JsonValue): JsonValue {
   return Object.fromEntries(entries);
 }
 
-export function stableJson(document: JsonObject): string {
+export function stableJson(document: JsonValue): string {
   return `${JSON.stringify(sortJsonValue(document), null, 2)}\n`;
 }

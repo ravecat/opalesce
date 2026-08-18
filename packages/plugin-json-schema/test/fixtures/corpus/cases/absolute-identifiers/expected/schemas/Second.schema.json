@@ -1,0 +1,5 @@
+{
+  "$id": "https://schemas.example.test/second.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "integer"
+}

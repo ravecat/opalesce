@@ -5,6 +5,8 @@ export const DRAFT_07_URI = "http://json-schema.org/draft-07/schema#";
 
 const LOCAL_COMPONENT_PREFIX = "#/components/schemas/";
 const SUPPORTED_VERSION = /^(?:2\.6|3\.0|3\.1)\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
+const INVALID_FILENAME_CHARACTER = /[<>:"/\\|?*]/u;
+const RESERVED_DEVICE_NAME = /^(?:AUX|CON|NUL|PRN|COM[1-9]|LPT[1-9])$/iu;
 const SCHEMA_MAP_KEYWORDS: readonly string[] = ["definitions", "patternProperties", "properties"];
 const SCHEMA_VALUE_KEYWORDS: readonly string[] = [
   "additionalItems",
@@ -21,16 +23,26 @@ const SCHEMA_ARRAY_KEYWORDS: readonly string[] = ["allOf", "anyOf", "oneOf"];
 type MutableJsonObject = Record<string, JsonValue>;
 type MutableSchema = MutableJsonObject | boolean;
 
-interface DefinitionSource {
+export interface ComponentSource {
   readonly componentPointer: string;
   readonly schemaPointer: string;
 }
 
-export interface BuiltBundle {
-  readonly document: JsonObject;
-  readonly definitionSources: ReadonlyMap<string, DefinitionSource>;
+export interface BuiltComponent {
+  readonly name: string;
+  readonly filename: string;
+  readonly document: JsonObject | boolean;
+  readonly source: ComponentSource;
+}
+
+export interface BuiltOutput {
+  readonly index: JsonObject;
+  readonly components: readonly BuiltComponent[];
   readonly extensionKeywords: ReadonlySet<string>;
-  readonly validationUri: string;
+}
+
+function compareStrings(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function errorDetails(values: Record<string, JsonValue>): JsonObject {
@@ -96,40 +108,11 @@ function copyValue(value: JsonValue, extensions: Set<string>): JsonValue {
 }
 
 function isDraft07Dialect(value: string): boolean {
-  return /^(?:http|https):\/\/json-schema\.org\/draft-07\/schema#?$/.test(value);
+  return /^(?:http|https):\/\/json-schema\.org\/draft-07\/schema#?$/u.test(value);
 }
 
 function isDraft07Format(value: string): boolean {
-  return value.toLowerCase().replaceAll(/\s+/g, "") === "application/schema+json;version=draft-07";
-}
-
-function validateDialect(
-  schema: MutableSchema,
-  componentPointer: string,
-  schemaPointer: string,
-): void {
-  if (typeof schema === "boolean") {
-    return;
-  }
-
-  const dialect = schema.$schema;
-  if (dialect !== undefined && (typeof dialect !== "string" || !isDraft07Dialect(dialect))) {
-    throw new JsonSchemaGenerationError(
-      "DIALECT_CONFLICT",
-      `Schema at "${componentPointer}" does not declare JSON Schema Draft 07.`,
-      {
-        sourcePointer: componentPointer,
-        details: errorDetails({
-          dialect: typeof dialect === "string" ? dialect : "<non-string>",
-          dialectPointer: `${schemaPointer}/$schema`,
-        }),
-      },
-    );
-  }
-
-  for (const [child, childPointer] of schemaChildren(schema, schemaPointer)) {
-    validateDialect(child, componentPointer, childPointer);
-  }
+  return value.toLowerCase().replaceAll(/\s+/gu, "") === "application/schema+json;version=draft-07";
 }
 
 function schemaChildren(
@@ -190,6 +173,36 @@ function schemaChildren(
   }
 
   return children;
+}
+
+function validateDialect(schema: MutableSchema, schemaPointer: string, root: boolean): void {
+  if (typeof schema === "boolean") {
+    return;
+  }
+
+  const dialect = schema.$schema;
+  if (dialect !== undefined) {
+    const dialectPointer = `${schemaPointer}/$schema`;
+    if (!root || typeof dialect !== "string" || !isDraft07Dialect(dialect)) {
+      throw new JsonSchemaGenerationError(
+        "DIALECT_CONFLICT",
+        root
+          ? `Schema at "${schemaPointer}" does not declare JSON Schema Draft 07.`
+          : `Schema dialect declaration at "${dialectPointer}" is not allowed in a subschema.`,
+        {
+          sourcePointer: dialectPointer,
+          details: errorDetails({
+            dialect: typeof dialect === "string" ? dialect : "<non-string>",
+            dialectPointer,
+          }),
+        },
+      );
+    }
+  }
+
+  for (const [child, childPointer] of schemaChildren(schema, schemaPointer)) {
+    validateDialect(child, childPointer, false);
+  }
 }
 
 function resolvedIdentifier(
@@ -267,18 +280,56 @@ function resourceUri(value: string): string {
   return url.href;
 }
 
+function hasInvalidFilenameCharacter(value: string): boolean {
+  return (
+    INVALID_FILENAME_CHARACTER.test(value) ||
+    [...value].some((character) => {
+      const codePoint = character.codePointAt(0);
+      return codePoint !== undefined && (codePoint <= 0x1f || codePoint === 0x7f);
+    })
+  );
+}
+
+function componentFilename(name: string, sourcePointer: string): string {
+  const filename = `${name}.schema.json`;
+  const deviceStem = name.split(".", 1)[0] ?? name;
+  if (
+    name.length === 0 ||
+    name === "." ||
+    name === ".." ||
+    hasInvalidFilenameCharacter(name) ||
+    /[. ]$/u.test(name) ||
+    RESERVED_DEVICE_NAME.test(deviceStem)
+  ) {
+    throw new JsonSchemaGenerationError(
+      "INVALID_COMPONENT_NAME",
+      `Component name "${name}" cannot be used as a portable artifact filename.`,
+      {
+        sourcePointer,
+        details: errorDetails({ componentName: name, filename }),
+      },
+    );
+  }
+  return filename;
+}
+
+function encodedFilename(filename: string): string {
+  return encodeURIComponent(filename);
+}
+
 function rewriteComponentReference(
   reference: string,
   pointer: string,
-  componentNames: ReadonlySet<string>,
+  filenames: ReadonlyMap<string, string>,
   currentBase: string | undefined,
 ): string {
   const remainder = reference.slice(LOCAL_COMPONENT_PREFIX.length);
-  const encodedComponent = remainder.split("/", 1)[0];
-  const component =
-    encodedComponent === undefined ? undefined : decodePointerToken(encodedComponent);
+  const slash = remainder.indexOf("/");
+  const encodedComponent = slash === -1 ? remainder : remainder.slice(0, slash);
+  const component = decodePointerToken(encodedComponent);
+  const filename = component === undefined ? undefined : filenames.get(component);
 
-  if (component === undefined || !componentNames.has(component)) {
+  if (component === undefined || filename === undefined) {
     throw new JsonSchemaGenerationError(
       "UNRESOLVED_REFERENCE",
       `Component schema reference "${reference}" does not resolve.`,
@@ -289,25 +340,25 @@ function rewriteComponentReference(
     );
   }
 
-  const bundlePointer = `#/definitions/${remainder}`;
-  if (currentBase === undefined) {
-    return bundlePointer;
+  if (currentBase !== undefined) {
+    throw new JsonSchemaGenerationError(
+      "UNSUPPORTED_REFERENCE",
+      `Component schema reference "${reference}" cannot be rewritten safely under an authored $id.`,
+      {
+        sourcePointer: pointer,
+        details: errorDetails({ reference, reason: "identifier-scoped-component-reference" }),
+      },
+    );
   }
 
-  throw new JsonSchemaGenerationError(
-    "UNSUPPORTED_REFERENCE",
-    `Component schema reference "${reference}" cannot be rewritten safely under an authored $id.`,
-    {
-      sourcePointer: pointer,
-      details: errorDetails({ reference, reason: "identifier-scoped-component-reference" }),
-    },
-  );
+  const suffix = slash === -1 ? "" : remainder.slice(slash);
+  return `./${encodedFilename(filename)}${suffix.length === 0 ? "" : `#${suffix}`}`;
 }
 
 function rewriteSchemaReferences(
   schema: MutableSchema,
   pointer: string,
-  componentNames: ReadonlySet<string>,
+  filenames: ReadonlyMap<string, string>,
   embeddedResources: ReadonlySet<string>,
   scopes: ReadonlyMap<MutableJsonObject, string | undefined>,
 ): void {
@@ -331,21 +382,7 @@ function rewriteSchemaReferences(
     }
 
     if (reference.startsWith(LOCAL_COMPONENT_PREFIX)) {
-      schema.$ref = rewriteComponentReference(
-        reference,
-        referencePointer,
-        componentNames,
-        currentBase,
-      );
-    } else if (reference.startsWith("#")) {
-      throw new JsonSchemaGenerationError(
-        "UNSUPPORTED_REFERENCE",
-        `Schema reference "${reference}" points outside the exported component root set.`,
-        {
-          sourcePointer: referencePointer,
-          details: errorDetails({ reference }),
-        },
-      );
+      schema.$ref = rewriteComponentReference(reference, referencePointer, filenames, currentBase);
     } else {
       let resolved: string;
       try {
@@ -375,17 +412,14 @@ function rewriteSchemaReferences(
   }
 
   for (const [child, childPointer] of schemaChildren(schema, pointer)) {
-    rewriteSchemaReferences(child, childPointer, componentNames, embeddedResources, scopes);
+    rewriteSchemaReferences(child, childPointer, filenames, embeddedResources, scopes);
   }
 }
 
-function selectedSchemas(
+function selectedComponents(
   source: AsyncAPISource,
   extensions: Set<string>,
-): {
-  readonly definitions: Record<string, MutableSchema>;
-  readonly sources: Map<string, DefinitionSource>;
-} {
+): readonly BuiltComponent[] {
   if (!isJsonObject(source.data)) {
     throw new JsonSchemaGenerationError(
       "INVALID_JSON_SCHEMA",
@@ -408,7 +442,7 @@ function selectedSchemas(
 
   const components = source.data.components;
   if (components === undefined) {
-    return { definitions: {}, sources: new Map() };
+    return [];
   }
   if (!isJsonObject(components)) {
     throw new JsonSchemaGenerationError(
@@ -420,7 +454,7 @@ function selectedSchemas(
 
   const schemas = components.schemas;
   if (schemas === undefined) {
-    return { definitions: {}, sources: new Map() };
+    return [];
   }
   if (!isJsonObject(schemas)) {
     throw new JsonSchemaGenerationError(
@@ -430,13 +464,33 @@ function selectedSchemas(
     );
   }
 
-  const definitionEntries: Array<readonly [string, MutableSchema]> = [];
-  const sources = new Map<string, DefinitionSource>();
-  for (const [componentName, authored] of Object.entries(schemas)) {
-    const componentPointer = `/components/schemas/${escapePointerToken(componentName)}`;
+  const entries = Object.entries(schemas).sort(([left], [right]) => compareStrings(left, right));
+  const componentsByFilename = new Map<string, ComponentSource>();
+  const selected: BuiltComponent[] = [];
+
+  for (const [name, authored] of entries) {
+    const componentPointer = `/components/schemas/${escapePointerToken(name)}`;
+    const filename = componentFilename(name, componentPointer);
+    const normalizedFilename = filename.normalize("NFC").toLowerCase();
+    const previousSource = componentsByFilename.get(normalizedFilename);
+    if (normalizedFilename === "index.schema.json" || previousSource !== undefined) {
+      throw new JsonSchemaGenerationError(
+        "COMPONENT_NAME_COLLISION",
+        `Component artifact filename "${filename}" is reserved or collides with another component.`,
+        {
+          sourcePointer: componentPointer,
+          details: errorDetails({
+            componentName: name,
+            filename,
+            firstSourcePointer: previousSource?.componentPointer ?? "<reserved-index>",
+            secondSourcePointer: componentPointer,
+          }),
+        },
+      );
+    }
+
     let schemaValue = authored;
     let schemaPointer = componentPointer;
-
     if (isJsonObject(authored) && "schemaFormat" in authored && "schema" in authored) {
       const schemaFormat = authored.schemaFormat;
       if (typeof schemaFormat !== "string" || !isDraft07Format(schemaFormat)) {
@@ -463,63 +517,64 @@ function selectedSchemas(
       );
     }
 
-    const copied = copyValue(schemaValue, extensions);
-    if (!isMutableSchema(copied)) {
+    const copiedValue = copyValue(schemaValue, extensions);
+    if (!isMutableSchema(copiedValue)) {
       throw new JsonSchemaGenerationError(
         "INVALID_JSON_SCHEMA",
         `Component schema at "${schemaPointer}" must be an object or boolean.`,
         { sourcePointer: schemaPointer },
       );
     }
-    validateDialect(copied, componentPointer, schemaPointer);
-    definitionEntries.push([componentName, copied]);
-    sources.set(componentName, { componentPointer, schemaPointer });
+    const copied = copiedValue as MutableSchema;
+    validateDialect(copied, schemaPointer, true);
+    if (typeof copied !== "boolean" && copied.$schema === undefined) {
+      copied.$schema = DRAFT_07_URI;
+    }
+
+    const componentSource = { componentPointer, schemaPointer };
+    componentsByFilename.set(normalizedFilename, componentSource);
+    selected.push({ name, filename, document: copied, source: componentSource });
   }
 
-  return { definitions: Object.fromEntries(definitionEntries), sources };
+  return selected;
 }
 
-export function buildBundle(source: AsyncAPISource): BuiltBundle {
+export function buildOutput(source: AsyncAPISource): BuiltOutput {
   const extensions = new Set<string>();
-  const { definitions, sources } = selectedSchemas(source, extensions);
+  const components = selectedComponents(source, extensions);
   const identifiers = new Map<string, string>();
   const scopes = new Map<MutableJsonObject, string | undefined>();
 
-  for (const [name, schema] of Object.entries(definitions)) {
-    const definitionSource = sources.get(name);
-    if (definitionSource === undefined) {
-      throw new Error(`Missing source metadata for component schema "${name}".`);
-    }
-    indexSchemaResources(schema, definitionSource.schemaPointer, undefined, identifiers, scopes);
+  for (const component of components) {
+    indexSchemaResources(
+      component.document as MutableSchema,
+      component.source.schemaPointer,
+      undefined,
+      identifiers,
+      scopes,
+    );
   }
 
   const embeddedResources = new Set(
     [...identifiers.keys()].map((identifier) => resourceUri(identifier)),
   );
-  const componentNames = new Set(Object.keys(definitions));
-  for (const [name, schema] of Object.entries(definitions)) {
-    const definitionSource = sources.get(name);
-    if (definitionSource === undefined) {
-      throw new Error(`Missing source metadata for component schema "${name}".`);
-    }
+  const filenames = new Map(components.map(({ name, filename }) => [name, filename]));
+  for (const component of components) {
     rewriteSchemaReferences(
-      schema,
-      definitionSource.schemaPointer,
-      componentNames,
+      component.document as MutableSchema,
+      component.source.schemaPointer,
+      filenames,
       embeddedResources,
       scopes,
     );
   }
 
-  const document: MutableJsonObject = {
-    $schema: DRAFT_07_URI,
-    definitions,
-  };
-
+  const definitions = Object.fromEntries(
+    components.map(({ name, filename }) => [name, { $ref: `./${encodedFilename(filename)}` }]),
+  );
   return {
-    document,
-    definitionSources: sources,
+    index: { $schema: DRAFT_07_URI, definitions },
+    components,
     extensionKeywords: extensions,
-    validationUri: "urn:opalesce:json-schema-bundle",
   };
 }

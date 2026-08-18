@@ -1,0 +1,10 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["version-3.1", "native", "name-collision"],
+  "expected": {
+    "kind": "error",
+    "code": "COMPONENT_NAME_COLLISION",
+    "sourcePointer": "/components/schemas/user"
+  }
+}

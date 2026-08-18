@@ -2,21 +2,21 @@
 
 Date: 2026-08-06
 
-Last reviewed: 2026-08-11
+Last reviewed: 2026-08-18
 
 ## Decision summary
 
-The implemented shape is reasonable as a deliberately narrow component-schema catalog, but it is not an AsyncAPI-standard export format and was not copied from Kubb. AsyncAPI standardizes the source schema locations, dialect rules, and references. Opalesce chooses the output roots, the one-file layout, and the pointer rewrite.
+The implemented shape is a deliberately narrow component-schema export, not an AsyncAPI-standard artifact format and not copied from Kubb. AsyncAPI standardizes the source schema locations, dialect rules, and references. Opalesce chooses the output roots, the one-file-per-component layout, the index, and the pointer rewrite.
 
 Keep the existing division of responsibility:
 
 - `@asyncapi/parser` parses and validates the AsyncAPI document.
-- Opalesce performs the policy-specific extraction and changes `#/components/schemas/*` into the output namespace.
-- Ajv checks the generated Draft 07 artifact and compiles every exported root.
+- Opalesce performs the policy-specific extraction and changes `#/components/schemas/*` into relative sibling resource references.
+- Ajv checks the generated Draft 07 resources and compiles every component directly and through the index.
 
-No maintained library found replaces those three responsibilities end to end. A JSON Schema bundler becomes useful when external schema resources are added, but it still cannot decide which AsyncAPI objects are public roots or define Opalesce's output layout.
+No maintained library found replaces those three responsibilities end to end. A JSON Schema bundler may become useful when external resources are added, but it still cannot decide which AsyncAPI objects are public roots or define Opalesce's output layout.
 
-Before publication, resolve one standards mismatch: Draft 07 says `$schema` must not appear in a subschema, while every value under the catalog's `definitions` is a subschema. The one-file option should therefore reject conflicting dialects and omit redundant component-level Draft 07 `$schema` values. Emitting every component as a separate root document is the alternative if exact preservation of component-level `$schema` is required: [JSON Schema Draft 07 `$schema`](https://json-schema.org/draft-07/json-schema-core#rfc.section.7).
+The pre-publication standards mismatch is resolved by emitting every component as a separate root document. Draft 07 says `$schema` must not appear in a subschema, so each object component can now carry its own root declaration while the generated index contains only `$ref` entries. Conflicting root declarations and all nested `$schema` declarations are rejected: [JSON Schema Draft 07 `$schema`](https://json-schema.org/draft-07/json-schema-core#rfc.section.7).
 
 ## Post-implementation audit: standard versus project policy
 
@@ -28,12 +28,20 @@ The version contracts are narrower than the general phrase "AsyncAPI schemas":
 
 The output shape is partly standard and partly Opalesce policy:
 
-- Draft 07 defines `definitions` as the standardized place for inline reusable schemas, so `definitions` rather than `$defs` is correct for this dialect. The keyword does not affect validation by itself: [JSON Schema Draft 07 `definitions`](https://json-schema.org/draft-07/json-schema-validation#rfc.section.9).
-- Consequently, `schemas.json` with only `$schema` and `definitions` accepts every JSON instance at its root. A consumer must compile a fragment such as `schemas.json#/definitions/Event`. The artifact is a catalog of roots, not a schema for an event union.
-- AsyncAPI does not prescribe moving `components.schemas` into `definitions`. The rewrite is necessary only because Opalesce relocates schemas from the AsyncAPI document into a standalone JSON Schema document.
+- Draft 07 defines `definitions` as the standardized place for reusable schemas, so `definitions` rather than `$defs` is correct for the generated index. The keyword does not affect validation by itself: [JSON Schema Draft 07 `definitions`](https://json-schema.org/draft-07/json-schema-validation#rfc.section.9).
+- `index.schema.json` accepts every JSON instance at its root. A consumer compiles a fragment such as `index.schema.json#/definitions/Event`, or loads `Event.schema.json` directly. The index is a catalog, not an event union.
+- AsyncAPI does not prescribe separate component files or an index. Opalesce rewrites component pointers because it relocates schemas from the AsyncAPI document into sibling JSON Schema resources.
 - The official JSON Schema bundling algorithm was documented in 2020-12. It embeds independently identified schema resources without changing their references. That algorithm cannot be applied directly to ordinary AsyncAPI components because they often have no absolute `$id`, and their references are pointers into the AsyncAPI document: [JSON Schema 2020-12 bundling](https://json-schema.org/draft/2020-12/json-schema-core#section-9.3.1).
 
-Kubb influenced only the architectural principle of separating input adaptation, semantic roots, and target emitters. Its shipped adapter is for OpenAPI, and its official plugins generate TypeScript, Zod, clients, mocks, and documentation rather than an AsyncAPI-to-JSON-Schema catalog: [Kubb adapters](https://kubb.dev/docs/5.x/guide/concepts/adapters), [Kubb plugins](https://kubb.dev/docs/5.x/guide/concepts/plugins). No Kubb implementation was reused for the current bundle shape.
+Kubb influenced the consumer expectation that directory output contains independently usable named artifacts and the architectural separation of input adaptation, semantic roots, and target emitters. Its shipped adapter is for OpenAPI, and no Kubb implementation was reused for this AsyncAPI-to-JSON-Schema output: [Kubb adapters](https://kubb.dev/docs/5.x/guide/concepts/adapters), [Kubb plugins](https://kubb.dev/docs/5.x/guide/concepts/plugins).
+
+### Kubb barrel versus `index.schema.json`
+
+Kubb's barrel is a code-module convenience, not a schema catalog. In directory mode, an enabled `output.barrel` aggregates generated TypeScript or JavaScript modules into `index.ts` so consumers can import named exports or re-export whole modules from one entry point. It is opt-in at the root or plugin level, `barrel: false` disables it, `nested: true` adds indexes in subdirectories, and file mode has no per-plugin directory barrel: [Kubb barrel configuration](https://kubb.dev/docs/5.x/reference/configuration), [current barrel lifecycle](https://github.com/kubb-labs/kubb/blob/52558cd52ce46edbd809c85bd4c80c68c36f6435/packages/plugin-barrel/src/plugin.ts#L77-L90), [directory-mode branch](https://github.com/kubb-labs/kubb/blob/52558cd52ce46edbd809c85bd4c80c68c36f6435/packages/plugin-barrel/src/plugin.ts#L122-L176).
+
+Kubb does not create an equivalent JSON or JSON Schema index. The current barrel implementation hard-codes `.ts`, `.tsx`, `.js`, and `.jsx` as indexable and always emits `index.ts`, so `.json` artifacts are excluded: [barrel source extensions and filename](https://github.com/kubb-labs/kubb/blob/52558cd52ce46edbd809c85bd4c80c68c36f6435/packages/plugin-barrel/src/utils.ts#L7-L8), [barrel input filter](https://github.com/kubb-labs/kubb/blob/52558cd52ce46edbd809c85bd4c80c68c36f6435/packages/plugin-barrel/src/utils.ts#L261-L276). Kubb v4's former OAS JSON generator did produce one camel-cased `.json` file per schema, but explicitly marked the JSON source as neither exportable nor indexable and emitted no JSON barrel: [Kubb v4 JSON generator](https://github.com/kubb-labs/kubb/blob/de5604927998abb76e4e21fc483e71998497cca5/packages/plugin-oas/src/generators/jsonGenerator.ts#L7-L37). The current official plugin registry lists code, validator, mock, client, documentation, and barrel outputs, but no JSON Schema output plugin: [Kubb plugin registry](https://kubb.dev/plugins).
+
+Opalesce's `index.schema.json` is instead a real Draft 07 schema resource. Its `definitions` map component names to sibling `<name>.schema.json` resources with `$ref`; it supports schema discovery and compilation through a stable catalog URI, but it does not export code symbols: [Opalesce output assembly](../../packages/plugin-json-schema/src/output.ts). Direct references between component files do not depend on this index, so keeping it is an Opalesce consumer-contract decision, not a behavior inherited from Kubb. The index is useful only if consumers need a single catalog entry point; loading known component files directly remains sufficient otherwise.
 
 ## What the repository already provides
 
@@ -77,15 +85,15 @@ One pinned-version edge case needs a regression test: the v3 Schema model recogn
 
 Extracting a component verbatim breaks references such as `#/components/schemas/Address`, because the generated schema has a different root. Fully dereferencing is not a solution: it creates cycles, duplicates content, and can change reference semantics. JSON Schema explicitly warns that removing references is not always behavior-preserving: [JSON Schema 2020-12, reference removal](https://json-schema.org/draft/2020-12/json-schema-core#section-b.2).
 
-Bundling is the appropriate transport shape. JSON Schema defines a compound document as embedded schema resources that preserve reference resolution, and recommends keeping embedded resources under a definitions location appropriate to the dialect: [JSON Schema 2020-12 bundling](https://json-schema.org/draft/2020-12/json-schema-core#section-9.3.1). For the recommended Draft 07 output, use `definitions`, not `$defs`.
+Sibling schema resources are the appropriate consumer shape for named components. Each component remains a schema root, cross-component pointers become relative file references, and `index.schema.json` maps the original names through Draft 07 `definitions`. The official compound-document bundling rules remain relevant only to a future explicit bundle or external-resource feature: [JSON Schema 2020-12 bundling](https://json-schema.org/draft/2020-12/json-schema-core#section-9.3.1).
 
 The plugin should:
 
 - Preserve every authored `$id`; do not equate it with a component key or file name.
-- Do not add a configurable bundle `$id` in the first delivery. Reject relative identifiers without an absolute authored ancestor and component references whose authored `$id` scope prevents safe bundle-local rewriting.
+- Do not add a configurable index `$id` in the first delivery. Reject relative identifiers without an absolute authored ancestor and component references whose authored `$id` scope prevents safe relative-file rewriting.
 - Fail on duplicate `$id` values.
 - Use component keys as logical artifact labels only.
-- Sanitize file names, reject path traversal and Windows-reserved names, and detect case-insensitive collisions before returning artifacts.
+- Map exact component keys to `<name>.schema.json`, reject path traversal and Windows-reserved names, and detect case-insensitive or Unicode-normalized collisions before returning artifacts.
 - Strip keys reserved by the parser, not all `x-*` extensions.
 - Default external HTTP and file resolution to disabled unless the user opts into a documented policy. This avoids unintended network access, SSRF, and arbitrary local file reads.
 
@@ -97,7 +105,7 @@ No first-party ready-made AsyncAPI-to-JSON-Schema artifact exporter was found. C
 | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | AsyncAPI syntax, version validation, model discovery, and schema-format dispatch                                                                  | [`@asyncapi/parser`](https://github.com/asyncapi/parser-js)                                                    | Keep. It already owns these concerns. Its custom schema parsers convert foreign payload formats into the AsyncAPI Schema Format, but the parser does not define a standalone JSON Schema artifact layout.                                                                                                                                      |
 | Select `components.schemas`, unwrap the AsyncAPI 3 wrapper, strip parser metadata, and map the AsyncAPI pointer namespace to the output namespace | None                                                                                                           | Keep a small Opalesce adapter. These are product policy decisions, not generic parsing or JSON Schema bundling.                                                                                                                                                                                                                                |
-| Draft 07 meta-validation and reference closure                                                                                                    | [`ajv`](https://ajv.js.org/json-schema.html) and [`ajv-formats`](https://github.com/ajv-validator/ajv-formats) | Keep. `validateSchema()` and per-definition compilation test the transformed output, which the earlier AsyncAPI validation cannot guarantee: [Ajv API](https://ajv.js.org/api.html).                                                                                                                                                           |
+| Draft 07 meta-validation and reference closure                                                                                                    | [`ajv`](https://ajv.js.org/json-schema.html) and [`ajv-formats`](https://github.com/ajv-validator/ajv-formats) | Keep. `validateSchema()` plus direct and index-based component compilation test the transformed multi-resource output, which the earlier AsyncAPI validation cannot guarantee: [Ajv API](https://ajv.js.org/api.html).                                                                                                                         |
 | Bundle external JSON Schema resources while preserving canonical identifiers                                                                      | [`@hyperjump/json-schema`](https://github.com/hyperjump-io/json-schema)                                        | Best candidate for a future external-resource feature. It supports Draft 07 and implements the official compound-document bundling process, but it expects JSON Schema resources with retrieval URIs or `$id` and does not extract AsyncAPI components.                                                                                        |
 | Generic parse, resolve, bundle, or dereference of `$ref`                                                                                          | [`@apidevtools/json-schema-ref-parser`](https://apidevtools.com/json-schema-ref-parser/docs/ref-parser.html)   | Do not add for the current internal-only rewrite. `bundle()` can help with external files, but it chooses its own internal locations; `dereference()` can create cyclic object graphs. File and HTTP resolvers also require an explicit security policy: [resolver options](https://apidevtools.com/json-schema-ref-parser/docs/options.html). |
 | Whole-document external reference bundling                                                                                                        | [`api-ref-bundler`](https://github.com/udamir/api-ref-bundler)                                                 | Optional future spike, not a replacement for extraction or dialect handling. Kubb adopted it because preserving named component identity mattered for code generation after `$RefParser.bundle()` relocated schemas to first-occurrence paths: [Kubb changelog](https://kubb.dev/docs/5.x/changelog).                                          |
@@ -105,7 +113,7 @@ No first-party ready-made AsyncAPI-to-JSON-Schema artifact exporter was found. C
 | General generation framework                                                                                                                      | [`@asyncapi/generator`](https://github.com/asyncapi/generator)                                                 | Do not embed. A custom template could reproduce the plugin, but would duplicate Opalesce's orchestration boundary rather than remove transformation policy.                                                                                                                                                                                    |
 | Programming-language model generation                                                                                                             | [`@asyncapi/modelina`](https://github.com/asyncapi/modelina)                                                   | Do not use. It generates typed source models from AsyncAPI, OpenAPI, or JSON Schema inputs rather than emitting source JSON Schemas.                                                                                                                                                                                                           |
 
-The official parser lists Avro, OpenAPI 3.0, and RAML custom schema parsers. They must be registered before parsing and convert into the AsyncAPI Schema Format: [`@asyncapi/parser` custom schema parsers](https://github.com/asyncapi/parser-js#custom-schema-parsers). They should remain opt-in input adapters. The current plugin intentionally reads the unresolved authored snapshot, so supporting their converted output would require a new Core contract rather than a hidden dependency in `buildBundle`.
+The official parser lists Avro, OpenAPI 3.0, and RAML custom schema parsers. They must be registered before parsing and convert into the AsyncAPI Schema Format: [`@asyncapi/parser` custom schema parsers](https://github.com/asyncapi/parser-js#custom-schema-parsers). They should remain opt-in input adapters. The current plugin intentionally reads the unresolved authored snapshot, so supporting their converted output would require a new Core contract rather than a hidden dependency in component output assembly.
 
 ## Generation root selection and the Kubb reference
 
@@ -142,23 +150,23 @@ AsyncAPI 3.1 makes the distinction explicit: a Message Object owns `payload` and
 
 A reusable Opalesce generation model should therefore distinguish at least schemas, messages, channels, and operations. Output plugins may project only the parts they understand, but they should share identities, source pointers, reference relationships, schema formats, and effective trait-merged semantics. A JSON Schema emitter also needs the raw ref-preserving source because a normalized code-generation AST can lose JSON Schema keywords or reference details.
 
-The `components.schemas`-only boundary remains valid for the first JSON Schema bundle as a deliberately narrow plugin policy. It must not become a Core-wide definition of which AsyncAPI contracts are generatable. If TypeScript, Zod, or client generators are part of the near-term roadmap, a separate generation-model change should define the shared root registry before those plugins independently invent incompatible discovery and naming rules.
+The `components.schemas`-only boundary remains valid for the first JSON Schema output as a deliberately narrow plugin policy. It must not become a Core-wide definition of which AsyncAPI contracts are generatable. If TypeScript, Zod, or client generators are part of the near-term roadmap, a separate generation-model change should define the shared root registry before those plugins independently invent incompatible discovery and naming rules.
 
 ## Proposed issue boundary
 
-Suggested title: `Export AsyncAPI component schemas as a Draft 07 JSON Schema bundle`
+Suggested title: `Export AsyncAPI component schemas as standalone Draft 07 files`
 
 Success criteria:
 
 - Core exposes an immutable, unresolved parsed AsyncAPI value and source URI to plugins without leaking Spectral types.
 - A reusable plugin emits deterministic UTF-8 JSON with a trailing newline.
-- AsyncAPI 2.6 and 3.1 named component schemas produce the same documented Draft 07 bundle shape.
+- AsyncAPI 2.6 and 3.1 named component schemas produce the same documented index and component-file shape.
 - Native and explicit Draft 07 schemas are supported, including `true` and `false`.
-- Internal, repeated, self-recursive, and mutually recursive references remain valid after bundling.
+- Internal, repeated, self-recursive, and mutually recursive references remain valid across sibling files.
 - Absolute authored `$id`, `$schema`, descriptions, examples, and non-parser extensions survive.
 - `x-parser-*` fields never appear in output.
 - Unknown or out-of-scope `schemaFormat` values fail with the format and source pointer in the error.
-- The generated bundle passes Ajv meta-schema validation and compilation, and positive and negative sample instances demonstrate preserved validation behavior.
+- Every generated resource passes Ajv meta-schema validation and multi-resource compilation, and positive and negative sample instances demonstrate preserved validation behavior.
 - Repeated runs are byte-identical, and invalid or colliding artifact names fail before persistence.
 
 Required fixtures should cover AsyncAPI 2.6 and 3.1, plain and wrapped schemas, boolean schemas, unused components, internal and explicitly allowed external refs, missing refs, recursion, absolute, relative, and duplicate `$id`, conflicting dialect declarations, unsupported formats, malicious names, case-only collisions, and deterministic ordering. Inline message payloads should have an explicit test showing they are excluded from this first scope.
@@ -168,5 +176,5 @@ Required fixtures should cover AsyncAPI 2.6 and 3.1, plain and wrapped schemas, 
 - Exposing only the resolved model forces unreliable reconstruction of lost references. Treat the unresolved document boundary as a prerequisite.
 - External resolution must reuse or deliberately replace the parser's resolver policy. A second resolver with different credentials, schemes, or base URI can validate one graph and emit another.
 - Foreign-format conversion is lossy and format-specific. Add each converter only with semantic fixtures and documented limitations.
-- Per-schema files require stable cross-file URI and naming rules. Implement them after the single-bundle format proves reference correctness.
+- Exact component names can be invalid or ambiguous filesystem names. Keep the current reject-on-conflict policy unless a future explicit naming strategy defines reversible mappings.
 - Inline payload and header export needs an identity and collision policy across AsyncAPI 2.x and 3.x. Do not use parser-generated anonymous IDs as a public file contract.

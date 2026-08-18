@@ -73,3 +73,11 @@
 
 - [x] 11.1 Inline one-use proxy helpers and intermediate values in the corpus, conformance, and config integration tests while preserving metadata validation, pipeline coverage, deterministic artifact comparison, and cleanup behavior.
 - [x] 11.2 Run focused plugin checks, formatting, lint, strict OpenSpec validation, and diff checks.
+
+## 12. Per-component Artifact Contract Correction
+
+- [x] 12.1 Replace the unpublished bundle proposal, design, and delta specification with standalone component artifacts, a schema index, portable filename rules, relative cross-file references, and root-only Draft 07 declarations.
+- [x] 12.2 Update focused unit, public type-contract, plugin integration, and conformance tests to require one index plus one artifact per named component and to cover filename failures.
+- [x] 12.3 Replace bundle assembly and validation with deterministic component planning, cross-file reference rewriting, index generation, and in-memory multi-resource Ajv compilation.
+- [x] 12.4 Replace package-owned expected artifact trees and documentation with the per-component consumer contract.
+- [x] 12.5 Run focused package checks, formatting, lint, strict OpenSpec validation, the full workspace check, and final diff review.

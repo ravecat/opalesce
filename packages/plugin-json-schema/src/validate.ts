@@ -1,7 +1,12 @@
 import type { JsonArray, JsonObject, JsonValue } from "@opalesce/core";
-import Ajv, { type ErrorObject } from "ajv";
+import Ajv, { type AnySchema, type ErrorObject } from "ajv";
 import addFormats from "ajv-formats";
-import { DRAFT_07_URI, escapePointerToken, type BuiltBundle } from "./bundle.js";
+import {
+  DRAFT_07_URI,
+  escapePointerToken,
+  type BuiltComponent,
+  type BuiltOutput,
+} from "./output.js";
 import { JsonSchemaGenerationError } from "./errors.js";
 
 const ASYNCAPI_ANNOTATION_KEYWORDS: readonly string[] = ["discriminator", "externalDocs"];
@@ -14,6 +19,7 @@ const ASYNCAPI_FORMATS: readonly string[] = [
   "int64",
   "password",
 ];
+const VALIDATION_ROOT = "https://opalesce.invalid/generated/";
 
 function errorDetails(values: Record<string, JsonValue>): JsonObject {
   return Object.freeze(values);
@@ -33,28 +39,8 @@ function ajvErrors(errors: readonly ErrorObject[] | null | undefined): JsonArray
   });
 }
 
-function sourcePointerForBundlePath(bundle: BuiltBundle, instancePath: string): string {
-  const match = /^\/definitions\/([^/]+)(.*)$/.exec(instancePath);
-  if (match === null) {
-    return "";
-  }
-
-  const encodedName = match[1];
-  if (encodedName === undefined) {
-    return "";
-  }
-
-  const name = encodedName.replaceAll("~1", "/").replaceAll("~0", "~");
-  const source = bundle.definitionSources.get(name);
-  return source === undefined ? "" : `${source.schemaPointer}${match[2] ?? ""}`;
-}
-
 function configuredAjv(extensionKeywords: ReadonlySet<string>): Ajv {
-  const ajv = new Ajv({
-    allErrors: true,
-    strict: true,
-    validateSchema: true,
-  });
+  const ajv = new Ajv({ allErrors: true, strict: true, validateSchema: true });
   addFormats(ajv);
 
   const draft07MetaSchema = ajv.getSchema(DRAFT_07_URI)?.schema;
@@ -72,70 +58,97 @@ function configuredAjv(extensionKeywords: ReadonlySet<string>): Ajv {
       ajv.addKeyword({ keyword, valid: true });
     }
   }
-
   for (const format of ASYNCAPI_FORMATS) {
     ajv.addFormat(format, true);
   }
-
   return ajv;
 }
 
-export function validateBundle(bundle: BuiltBundle): void {
-  const ajv = configuredAjv(bundle.extensionKeywords);
+function componentUri(component: BuiltComponent): string {
+  return new URL(encodeURIComponent(component.filename), VALIDATION_ROOT).href;
+}
 
-  if (!ajv.validateSchema(bundle.document)) {
-    const errors = ajvErrors(ajv.errors);
-    const firstError = ajv.errors?.[0];
-    const sourcePointer = sourcePointerForBundlePath(bundle, firstError?.instancePath ?? "");
-    throw new JsonSchemaGenerationError(
-      "INVALID_JSON_SCHEMA",
-      "Generated JSON Schema bundle does not conform to Draft 07.",
-      {
-        sourcePointer,
-        details: errorDetails({ errors }),
-      },
-    );
-  }
+function validationFailure(
+  message: string,
+  sourcePointer: string,
+  cause: unknown,
+): JsonSchemaGenerationError {
+  const causeMessage = cause instanceof Error ? cause.message : "Unknown Ajv compilation error.";
+  return new JsonSchemaGenerationError("INVALID_JSON_SCHEMA", message, {
+    sourcePointer,
+    details: errorDetails({ message: causeMessage }),
+  });
+}
 
+function validateDocument(ajv: Ajv, component: BuiltComponent): void {
   try {
-    ajv.addSchema(bundle.document, bundle.validationUri);
+    if (ajv.validateSchema(component.document as AnySchema)) {
+      return;
+    }
   } catch (cause) {
-    const message = cause instanceof Error ? cause.message : "Unknown Ajv compilation error.";
-    throw new JsonSchemaGenerationError(
-      "INVALID_JSON_SCHEMA",
-      "Generated JSON Schema bundle cannot be registered.",
-      {
-        sourcePointer: "",
-        details: errorDetails({ message }),
-      },
+    throw validationFailure(
+      `Generated JSON Schema component "${component.name}" cannot be validated.`,
+      component.source.schemaPointer,
+      cause,
     );
   }
 
-  const definitions = bundle.document.definitions;
-  if (typeof definitions !== "object" || definitions === null || Array.isArray(definitions)) {
+  const firstError = ajv.errors?.[0];
+  throw new JsonSchemaGenerationError(
+    "INVALID_JSON_SCHEMA",
+    `Generated JSON Schema component "${component.name}" does not conform to Draft 07.`,
+    {
+      sourcePointer: `${component.source.schemaPointer}${firstError?.instancePath ?? ""}`,
+      details: errorDetails({ errors: ajvErrors(ajv.errors) }),
+    },
+  );
+}
+
+export function validateOutput(output: BuiltOutput): void {
+  const ajv = configuredAjv(output.extensionKeywords);
+
+  for (const component of output.components) {
+    validateDocument(ajv, component);
+  }
+  if (!ajv.validateSchema(output.index)) {
     throw new JsonSchemaGenerationError(
       "INVALID_JSON_SCHEMA",
-      "Generated bundle definitions must be an object.",
-      { sourcePointer: "" },
+      "Generated JSON Schema index does not conform to Draft 07.",
+      { sourcePointer: "", details: errorDetails({ errors: ajvErrors(ajv.errors) }) },
     );
   }
 
-  for (const name of Object.keys(definitions)) {
+  for (const component of output.components) {
     try {
+      ajv.addSchema(component.document as AnySchema, componentUri(component));
+    } catch (cause) {
+      throw validationFailure(
+        `Generated JSON Schema component "${component.name}" cannot be registered.`,
+        component.source.schemaPointer,
+        cause,
+      );
+    }
+  }
+
+  const indexUri = new URL("index.schema.json", VALIDATION_ROOT).href;
+  try {
+    ajv.addSchema(output.index, indexUri);
+  } catch (cause) {
+    throw validationFailure("Generated JSON Schema index cannot be registered.", "", cause);
+  }
+
+  for (const component of output.components) {
+    try {
+      ajv.compile({ $schema: DRAFT_07_URI, $ref: componentUri(component) });
       ajv.compile({
         $schema: DRAFT_07_URI,
-        $ref: `${bundle.validationUri}#/definitions/${escapePointerToken(name)}`,
+        $ref: `${indexUri}#/definitions/${escapePointerToken(component.name)}`,
       });
     } catch (cause) {
-      const message = cause instanceof Error ? cause.message : "Unknown Ajv compilation error.";
-      const sourcePointer = bundle.definitionSources.get(name)?.schemaPointer ?? "";
-      throw new JsonSchemaGenerationError(
-        "INVALID_JSON_SCHEMA",
-        `Generated JSON Schema definition "${name}" cannot be compiled.`,
-        {
-          sourcePointer,
-          details: errorDetails({ message }),
-        },
+      throw validationFailure(
+        `Generated JSON Schema component "${component.name}" cannot be compiled.`,
+        component.source.schemaPointer,
+        cause,
       );
     }
   }

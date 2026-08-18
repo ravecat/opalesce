@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Unused": {
+      "$ref": "./Unused.schema.json"
+    },
+    "Used": {
+      "$ref": "./Used.schema.json"
+    }
+  }
+}

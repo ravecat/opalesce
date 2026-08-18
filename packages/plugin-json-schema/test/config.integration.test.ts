@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 const FIXTURE_ROOT = fileURLToPath(new URL("./fixtures/config/", import.meta.url));
 
 describe("JSON Schema consumer config", () => {
-  it("loads the package plugin through the CLI and persists its exact artifact", async () => {
+  it("loads the package plugin through the CLI and persists its exact artifact set", async () => {
     const outputPath = await mkdtemp(join(tmpdir(), "opalesce-plugin-json-schema-"));
     const stdout: string[] = [];
     const stderr: string[] = [];
@@ -25,10 +25,12 @@ describe("JSON Schema consumer config", () => {
         }),
       ).resolves.toBe(0);
 
-      await expect(readFile(join(outputPath, "schemas", "events.json"), "utf8")).resolves.toBe(
-        await readFile(join(FIXTURE_ROOT, "expected", "schemas", "events.json"), "utf8"),
-      );
-      expect(stdout).toEqual([`Generated 1 artifact -> ${outputPath}\n`]);
+      for (const filename of ["index.schema.json", "Event.schema.json"]) {
+        await expect(readFile(join(outputPath, "schemas", filename), "utf8")).resolves.toBe(
+          await readFile(join(FIXTURE_ROOT, "expected", "schemas", filename), "utf8"),
+        );
+      }
+      expect(stdout).toEqual([`Generated 2 artifacts -> ${outputPath}\n`]);
       expect(stderr).toEqual([]);
       await expect(access(join(FIXTURE_ROOT, "generated"))).rejects.toThrow();
     } finally {

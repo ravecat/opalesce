@@ -56,8 +56,10 @@ function fileField(record: Record<string, unknown>, field: string, pointer: stri
 
 function isErrorCode(value: string): value is JsonSchemaGenerationErrorCode {
   switch (value) {
+    case "COMPONENT_NAME_COLLISION":
     case "DIALECT_CONFLICT":
     case "DUPLICATE_SCHEMA_ID":
+    case "INVALID_COMPONENT_NAME":
     case "INVALID_JSON_SCHEMA":
     case "INVALID_SCHEMA_ID":
     case "SOURCE_UNAVAILABLE":
@@ -205,7 +207,17 @@ export async function loadCorpus(): Promise<readonly CorpusCase[]> {
       ...corpusCase,
       expected: {
         ...corpusCase.expected,
-        artifacts: paths.map((path) => ({ file: `expected/${path}`, path })),
+        artifacts: paths
+          .map((path) => ({ file: `expected/${path}`, path }))
+          .sort((left, right) => {
+            const leftIndex = left.path.endsWith("/index.schema.json");
+            const rightIndex = right.path.endsWith("/index.schema.json");
+            return leftIndex === rightIndex
+              ? left.path.localeCompare(right.path)
+              : leftIndex
+                ? -1
+                : 1;
+          }),
       },
     });
   }

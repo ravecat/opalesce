@@ -1,0 +1,10 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": ["version-3.1", "native", "invalid-name"],
+  "expected": {
+    "kind": "error",
+    "code": "INVALID_COMPONENT_NAME",
+    "sourcePointer": "/components/schemas/Tree~1Node"
+  }
+}

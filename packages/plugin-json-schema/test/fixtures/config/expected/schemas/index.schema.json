@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
-    "Allow": true,
-    "Deny": false
+    "Event": {
+      "$ref": "./Event.schema.json"
+    }
   }
 }

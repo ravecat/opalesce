@@ -5,6 +5,6 @@
   "expected": {
     "kind": "error",
     "code": "DIALECT_CONFLICT",
-    "sourcePointer": "/components/schemas/Event"
+    "sourcePointer": "/components/schemas/Event/schema/$schema"
   }
 }

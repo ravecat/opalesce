@@ -1,7 +1,7 @@
 {
   "name": "@opalesce/plugin-json-schema",
   "version": "0.0.1",
-  "description": "Generate deterministic JSON Schema Draft 07 bundles from AsyncAPI component schemas.",
+  "description": "Generate deterministic JSON Schema Draft 07 files from AsyncAPI component schemas.",
   "keywords": [
     "asyncapi",
     "codegen",

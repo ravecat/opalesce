@@ -1,8 +1,10 @@
 import type { JsonObject } from "@opalesce/core";
 
 export type JsonSchemaGenerationErrorCode =
+  | "COMPONENT_NAME_COLLISION"
   | "DIALECT_CONFLICT"
   | "DUPLICATE_SCHEMA_ID"
+  | "INVALID_COMPONENT_NAME"
   | "INVALID_JSON_SCHEMA"
   | "INVALID_SCHEMA_ID"
   | "SOURCE_UNAVAILABLE"

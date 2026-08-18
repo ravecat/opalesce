@@ -1,0 +1,9 @@
+{
+  "asyncapi": "3.1.0",
+  "info": { "title": "Invalid component name", "version": "1.0.0" },
+  "components": {
+    "schemas": {
+      "Tree/Node": { "type": "string" }
+    }
+  }
+}

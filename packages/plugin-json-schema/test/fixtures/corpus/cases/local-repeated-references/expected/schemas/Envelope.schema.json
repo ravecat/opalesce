@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "properties": {
+    "actor": {
+      "$ref": "./User.schema.json"
+    },
+    "subject": {
+      "$ref": "./User.schema.json"
+    }
+  },
+  "required": [
+    "actor",
+    "subject"
+  ],
+  "type": "object"
+}

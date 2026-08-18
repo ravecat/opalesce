@@ -8,7 +8,7 @@ export default defineConfig({
   },
   plugins: [
     jsonSchema({
-      outputPath: "schemas/events.json",
+      outputPath: "schemas",
     }),
   ],
 });

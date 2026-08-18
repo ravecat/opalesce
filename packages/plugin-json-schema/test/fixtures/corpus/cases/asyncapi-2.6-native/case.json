@@ -1,7 +1,7 @@
 {
   "input": "asyncapi.json",
   "version": "2.6.0",
-  "tags": ["version-2.6", "native", "unused-component", "inline-payload"],
+  "tags": ["version-2.6", "native", "unused-component", "inline-payload", "index"],
   "expected": {
     "kind": "success",
     "instances": [
