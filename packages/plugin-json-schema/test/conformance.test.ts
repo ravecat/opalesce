@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
-import type { JsonObject, JsonValue } from "@opalesce/core";
-import { parseAsyncAPI, run } from "@opalesce/core";
+import type { JsonObject, JsonValue, PluginContext } from "@opalesce/core";
+import { run } from "@opalesce/core";
 import Ajv, { type AnySchema } from "ajv";
 import addFormats from "ajv-formats";
 import { describe, expect, it } from "vitest";
@@ -133,10 +133,31 @@ async function expectInstances(
 }
 
 const corpus = await loadCorpus();
-const discoveryDocument = await parseAsyncAPI({
-  asyncapi: "3.1.0",
-  info: { title: "Corpus discovery document", version: "1.0.0" },
-});
+
+async function captureDiscoveryContext(): Promise<PluginContext> {
+  let captured: PluginContext | undefined;
+  await run({
+    input: {
+      asyncapi: "3.1.0",
+      info: { title: "Corpus discovery document", version: "1.0.0" },
+    },
+    plugins: [
+      {
+        name: "capture-context",
+        generate(context) {
+          captured = context;
+          return [];
+        },
+      },
+    ],
+  });
+  if (captured === undefined) {
+    throw new Error("The discovery plugin did not receive a context.");
+  }
+  return captured;
+}
+
+const discoveryContext = await captureDiscoveryContext();
 
 describe("JSON Schema output conformance corpus", () => {
   it("is complete, case-local, and free of orphan fixture files", async () => {
@@ -187,16 +208,18 @@ describe("JSON Schema output conformance corpus", () => {
         if (corpusCase.sourceUnavailable) {
           await jsonSchema().generate(
             Object.freeze({
-              document: discoveryDocument.document,
-              diagnostics: discoveryDocument.diagnostics,
+              document: discoveryContext.document,
+              interaction: discoveryContext.interaction,
+              diagnostics: discoveryContext.diagnostics,
             }),
           );
         } else {
           const inputUrl = caseFileUrl(corpusCase, corpusCase.input);
           await jsonSchema().generate(
             Object.freeze({
-              document: discoveryDocument.document,
-              diagnostics: discoveryDocument.diagnostics,
+              document: discoveryContext.document,
+              interaction: discoveryContext.interaction,
+              diagnostics: discoveryContext.diagnostics,
               source: Object.freeze({
                 data: jsonObject(JSON.parse(await readFile(inputUrl, "utf8")) as unknown),
                 uri: inputUrl.href,

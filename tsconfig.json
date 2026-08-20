@@ -15,6 +15,9 @@
     },
     {
       "path": "./packages/plugin-json-schema"
+    },
+    {
+      "path": "./packages/plugin-typescript"
     }
   ]
 }

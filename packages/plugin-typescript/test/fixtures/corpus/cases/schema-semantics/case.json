@@ -1,0 +1,17 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "tags": [
+    "access-annotations",
+    "additional-properties",
+    "composition",
+    "jsdoc-escaping",
+    "literals",
+    "mutual-recursive",
+    "nullability",
+    "references",
+    "self-recursive",
+    "unsafe-key"
+  ],
+  "expected": { "kind": "success" }
+}

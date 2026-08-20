@@ -1,24 +1,23 @@
 # opalesce
 
-`opalesce` is the consumer-facing package for the Opalesce generation pipeline. It provides project configuration, plugin definition, and the `opalesce` executable through one base dependency.
+`opalesce` is the consumer-facing package for the Opalesce generation pipeline. It provides project configuration, plugin definition, shared interaction contract types, Core orchestration glue, and the `opalesce` executable. Output plugins are separate `@opalesce/plugin-*` packages with independent releases.
 
 The package is published to the public npm registry as the recommended entry point for consumers.
 
 ## Quick Start
 
-Future public installation will require the facade:
+Install the facade and each plugin required by the project:
 
 ```sh
-pnpm add -D opalesce
+pnpm add -D opalesce @opalesce/plugin-typescript
 ```
-
-Add output plugin packages separately when they become available.
 
 Inside this workspace, use `workspace:*`:
 
 ```json
 {
   "devDependencies": {
+    "@opalesce/plugin-typescript": "workspace:*",
     "opalesce": "workspace:*"
   },
   "scripts": {
@@ -30,19 +29,8 @@ Inside this workspace, use `workspace:*`:
 Create `opalesce.config.ts`:
 
 ```ts
-import { defineConfig, definePlugin } from "opalesce";
-
-const metadata = definePlugin(() => ({
-  name: "metadata",
-  generate(context) {
-    return [
-      {
-        path: "metadata/version.txt",
-        contents: `${context.document.version()}\n`,
-      },
-    ];
-  },
-}));
+import { defineConfig } from "opalesce";
+import typescript from "@opalesce/plugin-typescript";
 
 export default defineConfig({
   input: "./asyncapi.yaml",
@@ -50,7 +38,7 @@ export default defineConfig({
     path: "./generated",
     clean: true,
   },
-  plugins: [metadata()],
+  plugins: [typescript()],
 });
 ```
 
@@ -60,7 +48,7 @@ Run generation:
 opalesce generate
 ```
 
-Projects install concrete output plugins separately. They do not need direct dependencies on `@opalesce/cli`, `@opalesce/config`, or `@opalesce/core`.
+Projects do not need direct dependencies on `@opalesce/cli`, `@opalesce/config`, or `@opalesce/core`. They add only the independently published output-plugin packages they use.
 
 ## Public Entry Points
 
@@ -75,7 +63,34 @@ import { defineConfig, definePlugin } from "opalesce";
 - `defineConfig` authors a path-based `opalesce.config.*` file.
 - `definePlugin` authors an orchestration plugin.
 
+Plugin authors receive the complete parser document and one shared interaction contract:
+
+```ts
+const report = definePlugin(() => ({
+  name: "interaction-report",
+  generate({ document, interaction }) {
+    return [
+      {
+        path: "interaction.txt",
+        contents: `${document.version()}:${interaction.operations.length}\n`,
+      },
+    ];
+  },
+}));
+```
+
 The consumer facade does not expose the internal pipeline runner, parser, errors, or their types.
+
+### `@opalesce/plugin-typescript`
+
+Use the independently published TypeScript plugin with the `opalesce` configuration API:
+
+```ts
+import { defineConfig } from "opalesce";
+import typescript from "@opalesce/plugin-typescript";
+```
+
+The plugin generates deterministic ESM type contracts under `types/` by default. It is not a runtime or transitive dependency of `opalesce`.
 
 ### `opalesce/config`
 
@@ -92,6 +107,9 @@ opalesce
   -> @opalesce/cli
   -> @opalesce/config
   -> @opalesce/core
+
+@opalesce/plugin-typescript
+  -> @opalesce/core
 ```
 
-Core owns parsing and the filesystem-free plugin engine. CLI owns config loading and persistence. The facade contains no config loading, pipeline, parsing, or persistence logic of its own.
+Core owns parsing, the target-neutral interaction contract, and the filesystem-free plugin engine. The TypeScript plugin owns language projection and source rendering. CLI owns config loading and persistence. The facade provides only the public Core and orchestration boundary and does not bundle output plugins.

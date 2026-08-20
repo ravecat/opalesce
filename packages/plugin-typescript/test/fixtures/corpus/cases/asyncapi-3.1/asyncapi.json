@@ -1,0 +1,38 @@
+{
+  "asyncapi": "3.1.0",
+  "info": { "title": "TypeScript 3.1", "version": "1.0.0" },
+  "channels": {
+    "commands": {
+      "address": "commands/{tenant-id}",
+      "parameters": {
+        "tenant-id": {
+          "description": "Tenant identifier",
+          "enum": ["a", "b"]
+        }
+      },
+      "messages": {
+        "execute": {
+          "payload": {
+            "type": "object",
+            "required": ["command"],
+            "properties": { "command": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "replies": {
+      "address": "replies",
+      "messages": {
+        "accepted": { "payload": { "const": true } },
+        "rejected": { "payload": { "const": false } }
+      }
+    }
+  },
+  "operations": {
+    "executeCommand": {
+      "action": "send",
+      "channel": { "$ref": "#/channels/commands" },
+      "reply": { "channel": { "$ref": "#/channels/replies" } }
+    }
+  }
+}

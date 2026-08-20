@@ -1,0 +1,6 @@
+{
+  "name": "@opalesce/plugin-typescript",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/plugin-typescript/src"
+}

@@ -1,0 +1,5 @@
+{
+  "asyncapi": "3.1.0",
+  "info": { "title": "Invalid root name", "version": "1.0.0" },
+  "components": { "schemas": { "!!!": { "type": "string" } } }
+}

@@ -1,0 +1,10 @@
+{
+  "asyncapi": "3.1.0",
+  "info": { "title": "Filename collision", "version": "1.0.0" },
+  "components": {
+    "schemas": {
+      "foo-bar": { "type": "string" },
+      "foo_bar": { "type": "number" }
+    }
+  }
+}

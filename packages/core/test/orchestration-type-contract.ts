@@ -7,6 +7,7 @@ import {
   type Diagnostic,
   type GeneratedArtifact,
   type Input,
+  type InteractionContract,
   type OrchestrationPlugin,
   type ParseAsyncAPIOptions,
   type PipelineConfig,
@@ -39,11 +40,13 @@ const config = defineConfig({
 const document = pluginContext.document;
 const diagnostics = pluginContext.diagnostics;
 const sourceSnapshot = pluginContext.source;
+const interaction = pluginContext.interaction;
 
 void config;
 void document;
 void diagnostics;
 void sourceSnapshot;
+void interaction;
 
 export type ConfigPreservesPluginList = Expect<
   Equal<typeof config.plugins, readonly [ReturnType<typeof configuredPlugin>]>
@@ -55,7 +58,10 @@ export type PluginUsesSingleGenerateHook = Expect<
   Equal<keyof OrchestrationPlugin, "name" | "generate">
 >;
 export type ContextHasOnlyGenerateInputs = Expect<
-  Equal<keyof PluginContext, "diagnostics" | "document" | "source">
+  Equal<keyof PluginContext, "diagnostics" | "document" | "interaction" | "source">
+>;
+export type ContextUsesInteractionContract = Expect<
+  Equal<PluginContext["interaction"], InteractionContract>
 >;
 export type PluginGenerateReturnsArtifacts = Expect<
   Equal<

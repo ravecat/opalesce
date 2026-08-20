@@ -5,6 +5,8 @@ import type {
   AsyncAPISource,
   Diagnostic,
   Input,
+  InteractionContract,
+  InteractionRootMetadata,
   JsonArray,
   JsonObject,
   JsonPrimitive,
@@ -42,9 +44,19 @@ export type JsonObjectValuesAreReadonly = Expect<Equal<JsonObject["field"], Json
 
 export type RootTypeExportsAreUsable = [
   Input,
+  InteractionContract,
+  InteractionRootMetadata,
   ParseOptions,
   JsonArray,
   JsonObject,
   JsonPrimitive,
   JsonValue,
 ];
+
+declare const interaction: InteractionContract;
+
+// @ts-expect-error interaction roots are readonly
+interaction.schemas = [];
+
+// @ts-expect-error interaction collections are readonly
+interaction.messages.push();

@@ -20,3 +20,23 @@ export type {
   ParsedAsyncAPI,
 } from "./parseAsyncAPI.js";
 export type { AsyncAPISource, JsonArray, JsonObject, JsonPrimitive, JsonValue } from "./source.js";
+export { InteractionContractError } from "./interaction/errors.js";
+export type {
+  InteractionContractErrorCode,
+  InteractionContractErrorOptions,
+} from "./interaction/errors.js";
+export type {
+  ChannelContract,
+  ChannelParameterContract,
+  InteractionAction,
+  InteractionAsyncAPIVersion,
+  InteractionContract,
+  InteractionRootKind,
+  InteractionRootMetadata,
+  MessageContract,
+  OperationContract,
+  ReplyContract,
+  SchemaContract,
+  SchemaDependencyContract,
+  SchemaRoleContract,
+} from "./interaction/types.js";

@@ -1,4 +1,5 @@
-import { defineConfig, definePlugin } from "../src/index.js";
+import { defineConfig, definePlugin, type InteractionContract } from "../src/index.js";
+import typescript, { type TypeScriptPluginOptions } from "@opalesce/plugin-typescript";
 import { defineConfig as defineConfigFromSubpath } from "../src/config.js";
 
 type Equal<Left, Right> =
@@ -11,10 +12,11 @@ type Expect<Value extends true> = Value;
 const plugin = definePlugin((options: { readonly path: string }) => ({
   name: "facade-plugin",
   generate(context) {
+    const interaction: InteractionContract = context.interaction;
     return [
       {
         path: options.path,
-        contents: context.document.version(),
+        contents: `${context.document.version()}:${interaction.asyncapiVersion}`,
       },
     ];
   },
@@ -34,12 +36,14 @@ const projectConfigFromSubpath = defineConfigFromSubpath({
     path: "./generated",
   },
 });
+const typescriptPlugin = typescript({ outputPath: "types" });
 
 // @ts-expect-error Project config requires an output path.
 defineConfig({ input: "./asyncapi.yaml" });
 
 void projectConfig;
 void projectConfigFromSubpath;
+void typescriptPlugin;
 
 export type ConfigInputLiteralIsPreserved = Expect<
   Equal<typeof projectConfig.input, "./asyncapi.yaml">
@@ -47,3 +51,7 @@ export type ConfigInputLiteralIsPreserved = Expect<
 export type PluginOptionsArePreserved = Expect<
   Equal<Parameters<typeof plugin>, [{ readonly path: string }]>
 >;
+export type TypeScriptOptionsArePreserved = Expect<
+  Equal<TypeScriptPluginOptions, { readonly outputPath?: string }>
+>;
+export type TypeScriptNameIsStable = Expect<Equal<typeof typescriptPlugin.name, "typescript">>;

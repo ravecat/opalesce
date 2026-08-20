@@ -4,7 +4,8 @@
     "**/dist/**",
     ".nx/**",
     "packages/plugin-json-schema/test/fixtures/config/expected/**",
-    "packages/plugin-json-schema/test/fixtures/corpus/cases/*/expected/**"
+    "packages/plugin-json-schema/test/fixtures/corpus/cases/*/expected/**",
+    "packages/plugin-typescript/test/fixtures/corpus/cases/*/expected/**"
   ],
   "printWidth": 100,
   "tabWidth": 2,

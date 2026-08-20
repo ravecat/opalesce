@@ -1,0 +1,11 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "schemaParser": "avro",
+  "tags": ["unsupported-format"],
+  "expected": {
+    "kind": "error",
+    "code": "TYPESCRIPT_FORMAT_UNSUPPORTED",
+    "pointer": "/components/schemas/Event"
+  }
+}

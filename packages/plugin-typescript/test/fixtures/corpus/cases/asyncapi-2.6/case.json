@@ -1,0 +1,6 @@
+{
+  "input": "asyncapi.json",
+  "version": "2.6.0",
+  "tags": ["headers", "inline-message", "operation"],
+  "expected": { "kind": "success" }
+}

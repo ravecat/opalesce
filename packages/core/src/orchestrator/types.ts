@@ -5,6 +5,7 @@ import type {
   ParseAsyncAPIOptions,
 } from "../parseAsyncAPI.js";
 import type { AsyncAPISource } from "../source.js";
+import type { InteractionContract } from "../interaction/types.js";
 export interface GeneratedArtifact {
   readonly path: string;
   readonly contents: string;
@@ -12,6 +13,7 @@ export interface GeneratedArtifact {
 
 export interface PluginContext {
   readonly document: AsyncAPIDocumentInterface;
+  readonly interaction: InteractionContract;
   readonly diagnostics: readonly Diagnostic[];
   readonly source?: AsyncAPISource;
 }

@@ -1,0 +1,20 @@
+{
+  "asyncapi": "2.6.0",
+  "info": { "title": "TypeScript 2.6", "version": "1.0.0" },
+  "channels": {
+    "events": {
+      "subscribe": {
+        "operationId": "receiveEvent",
+        "message": {
+          "name": "Event",
+          "headers": {
+            "type": "object",
+            "required": ["traceId"],
+            "properties": { "traceId": { "type": "string" } }
+          },
+          "payload": { "type": "string" }
+        }
+      }
+    }
+  }
+}

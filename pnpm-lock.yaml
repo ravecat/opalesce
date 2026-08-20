@@ -68,6 +68,10 @@ importers:
       '@opalesce/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      '@opalesce/plugin-typescript':
+        specifier: workspace:*
+        version: link:../plugin-typescript
 
   packages/plugin-json-schema:
     dependencies:
@@ -87,6 +91,15 @@ importers:
       opalesce:
         specifier: workspace:*
         version: link:../opalesce
+
+  packages/plugin-typescript:
+    dependencies:
+      '@opalesce/core':
+        specifier: workspace:*
+        version: link:../core
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.2
 
 packages:
 

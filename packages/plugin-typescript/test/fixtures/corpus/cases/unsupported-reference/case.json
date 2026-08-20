@@ -1,0 +1,11 @@
+{
+  "input": "asyncapi.json",
+  "version": "3.1.0",
+  "schemaParser": "draft07-unchecked",
+  "tags": ["unsupported-reference"],
+  "expected": {
+    "kind": "error",
+    "code": "TYPESCRIPT_SCHEMA_UNSUPPORTED",
+    "pointer": "/components/schemas/Event"
+  }
+}

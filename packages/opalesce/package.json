@@ -13,8 +13,7 @@
     "event-driven-architecture",
     "opalesce",
     "plugin-system",
-    "plugins",
-    "typescript"
+    "plugins"
   ],
   "license": "MIT",
   "repository": {
@@ -55,5 +54,8 @@
     "@opalesce/cli": "workspace:*",
     "@opalesce/config": "workspace:*",
     "@opalesce/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@opalesce/plugin-typescript": "workspace:*"
   }
 }

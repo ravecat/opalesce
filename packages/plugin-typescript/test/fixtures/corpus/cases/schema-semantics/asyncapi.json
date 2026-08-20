@@ -1,0 +1,54 @@
+{
+  "asyncapi": "3.1.0",
+  "info": { "title": "Schema semantics", "version": "1.0.0" },
+  "components": {
+    "schemas": {
+      "Base": {
+        "type": "object",
+        "required": ["id", "secret", "unsafe-key"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "readOnly": true },
+          "note": { "type": ["string", "null"] },
+          "secret": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "bad */ export type Injected = never;"
+          },
+          "unsafe-key": { "enum": ["a", "b"] }
+        }
+      },
+      "Choice": { "oneOf": [{ "const": "created" }, { "const": "processed" }] },
+      "Combined": {
+        "allOf": [{ "$ref": "#/components/schemas/Base" }, { "$ref": "#/components/schemas/Extra" }]
+      },
+      "Extra": { "type": "object", "properties": { "count": { "type": "integer" } } },
+      "Left": {
+        "type": "object",
+        "properties": { "right": { "$ref": "#/components/schemas/Right" } }
+      },
+      "MixedMap": {
+        "type": "object",
+        "properties": { "fixed": { "type": "number" } },
+        "additionalProperties": { "type": "string" }
+      },
+      "Right": {
+        "type": "object",
+        "properties": { "left": { "$ref": "#/components/schemas/Left" } }
+      },
+      "Self": {
+        "type": "object",
+        "properties": { "next": { "$ref": "#/components/schemas/Self" } }
+      },
+      "StringMap": {
+        "type": "object",
+        "properties": { "fixed": { "type": "string" } },
+        "additionalProperties": { "type": "string" }
+      },
+      "Tuple": {
+        "type": "array",
+        "items": [{ "type": "string" }, { "type": "number" }]
+      }
+    }
+  }
+}

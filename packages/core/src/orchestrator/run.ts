@@ -1,4 +1,5 @@
 import { parseAsyncAPI } from "../parseAsyncAPI.js";
+import { buildInteractionContract } from "../interaction/build.js";
 import { ArtifactStore } from "./artifacts.js";
 import { PluginExecutionError } from "./errors.js";
 import type { PipelineConfig, PipelineResult, PluginContext } from "./types.js";
@@ -15,9 +16,32 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   const plugins = Object.freeze([...(config.plugins ?? [])]);
   const parsed = await parseAsyncAPI(config.input, config.parser);
   const artifacts = new ArtifactStore();
+  let interaction: ReturnType<typeof buildInteractionContract> | undefined;
+  let interactionError: unknown;
+  let interactionFailed = false;
+
+  const getInteraction = (): ReturnType<typeof buildInteractionContract> => {
+    if (interaction !== undefined) {
+      return interaction;
+    }
+    if (interactionFailed) {
+      throw interactionError;
+    }
+    try {
+      interaction = buildInteractionContract(parsed.document);
+      return interaction;
+    } catch (error: unknown) {
+      interactionError = error;
+      interactionFailed = true;
+      throw error;
+    }
+  };
 
   const context: PluginContext = Object.freeze({
     document: parsed.document,
+    get interaction() {
+      return getInteraction();
+    },
     diagnostics: parsed.diagnostics,
     ...(parsed.source === undefined ? {} : { source: parsed.source }),
   });

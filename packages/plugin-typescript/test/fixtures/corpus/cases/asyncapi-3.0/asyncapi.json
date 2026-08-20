@@ -1,0 +1,33 @@
+{
+  "asyncapi": "3.0.0",
+  "info": { "title": "TypeScript 3.0", "version": "1.0.0" },
+  "channels": {
+    "events": {
+      "address": "events",
+      "messages": {
+        "created": { "$ref": "#/components/messages/EventCreated" }
+      }
+    }
+  },
+  "operations": {
+    "sendEvent": {
+      "action": "send",
+      "channel": { "$ref": "#/channels/events" }
+    }
+  },
+  "components": {
+    "messages": {
+      "EventCreated": {
+        "payload": { "$ref": "#/components/schemas/Event" }
+      }
+    },
+    "schemas": {
+      "Event": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      },
+      "Unused": { "type": "integer" }
+    }
+  }
+}

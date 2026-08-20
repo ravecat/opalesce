@@ -114,8 +114,9 @@ The scoped package is not a normal consumer dependency; prefer the `opalesce` fa
 
 1. Snapshot `config.plugins` in declared order.
 2. Parse `config.input` once.
-3. Run and await each plugin `generate` in declared order.
-4. Return a frozen result with all in-memory artifacts.
+3. Create one frozen plugin context with a lazy interaction contract.
+4. Run and await each plugin `generate` in declared order.
+5. Return a frozen result with all in-memory artifacts.
 
 Core parse failures pass through unchanged. A generation failure stops the pipeline immediately, so later plugins do not run.
 
@@ -192,11 +193,29 @@ interface OrchestrationPlugin {
 }
 ```
 
-- `generate` receives the parsed document, parser diagnostics, and optional unresolved source snapshot and returns text artifacts.
+The context separates the complete parser model from shared generation semantics:
+
+```ts
+interface PluginContext {
+  readonly document: AsyncAPIDocumentInterface;
+  readonly interaction: InteractionContract;
+  readonly diagnostics: readonly Diagnostic[];
+  readonly source?: AsyncAPISource;
+}
+```
+
+- `document` is the complete official parser model, including bindings, servers, security, and extensions.
+- `interaction` is the target-neutral schema, message, channel, parameter, operation, reply, and dependency contract shared by TypeScript, Zod, and other output plugins.
+- `diagnostics` contains parser diagnostics.
+- `source` is the optional unresolved source snapshot.
+- `generate` returns text artifacts.
 - Plugin generations run sequentially in the exact order declared in `plugins`.
 - Core awaits asynchronous generation before starting the next plugin.
-- Each plugin derives and owns any generator-specific model it needs.
+- Core lazily builds `interaction` on first access and returns the same immutable contract identity to every plugin in the run.
+- Plugins own target-specific projection, naming, rendering, and files.
 - Plugins do not receive services or artifacts from other plugins.
+
+Contract normalization supports AsyncAPI 2.6, 3.0, and 3.1. A plugin that never reads `interaction` does not trigger normalization, so document-only plugins retain parser-level version support. Contract construction never reads files, accesses the network, or invokes another parser.
 
 For raw text and object inputs, `context.source.data` is an Opalesce-owned recursively frozen snapshot captured before parser reference resolution. It preserves authored `$ref` strings and boolean schemas instead of exposing the resolved, potentially cyclic parser model. `context.source.uri` contains `parse.source` when supplied. The same source identity is shared by every plugin and the pipeline result.
 
@@ -279,6 +298,7 @@ Runtime exports:
 - `run`
 - `PluginExecutionError`
 - `ArtifactError`
+- `InteractionContractError`
 
 The root entry point also exports parser, pipeline, plugin, context, artifact, and error-code types, including:
 
@@ -293,6 +313,12 @@ The root entry point also exports parser, pipeline, plugin, context, artifact, a
 - `PipelineConfig`
 - `PipelineResult`
 - `GeneratedArtifact`
+- `InteractionContract`
+- `SchemaContract`
+- `MessageContract`
+- `ChannelContract`
+- `OperationContract`
+- `ReplyContract`
 
 ## Current Boundaries
 
