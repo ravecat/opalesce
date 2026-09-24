@@ -75,6 +75,7 @@
       "conventionalCommits": true,
       "fallbackCurrentVersionResolver": "disk",
       "adjustSemverBumpsForZeroMajorVersion": true,
+      "applyPreidToDependents": true,
       "updateDependents": "always",
       "preserveLocalDependencyProtocols": true
     },

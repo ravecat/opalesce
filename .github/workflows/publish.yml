@@ -1,17 +1,93 @@
 name: publish packages
-run-name: npm release - ${{ github.ref_name }}
+run-name: ${{ github.event_name == 'push' && 'canary' || 'release' }} - ${{ github.ref_name }}
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  canary-packages:
+    name: Publish npm canary packages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+    concurrency:
+      group: canary-packages-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NPM_CONFIG_PROVENANCE: true
+    defaults:
+      run:
+        shell: nix develop --command bash --noprofile --norc -eo pipefail {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          filter: tree:0
+          persist-credentials: false
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v17
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check workspace
+        run: just check
+
+      - name: Version canary packages
+        id: canary-version
+        run: |
+          short_sha="${GITHUB_SHA:0:8}"
+          pnpm exec nx release version \
+            --preid "canary.${short_sha}" \
+            --git-commit=false \
+            --git-tag=false \
+            --git-push=false \
+            --stage-changes=false
+
+          projects=()
+          while IFS= read -r -d '' manifest; do
+            name=$(node -p 'require("./" + process.argv[1]).name' "$manifest")
+            version=$(node -p 'require("./" + process.argv[1]).version' "$manifest")
+            if result=$(npm view "$name@$version" version --json 2>/dev/null); then
+              echo "Already published $name@$version; skipping"
+            else
+              if [[ $(node -p 'JSON.parse(process.argv[1]).error?.code' "$result") != E404 ]]; then
+                echo "Cannot check $name@$version in npm: $result" >&2
+                exit 1
+              fi
+              projects+=("$name")
+            fi
+          done < <(git diff --name-only -z -- 'packages/*/package.json')
+          echo "projects=$(IFS=,; echo "${projects[*]}")" >> "$GITHUB_OUTPUT"
+
+      - name: Publish canary packages
+        if: steps.canary-version.outputs.projects != ''
+        run: >-
+          pnpm exec nx release publish
+          --projects="${{ steps.canary-version.outputs.projects }}"
+          --tag canary
+          --parallel=1
+          --nxBail
+          --outputStyle=static
+
   release-packages:
     name: Release npm packages
     runs-on: ubuntu-latest
-    if: github.ref_name == github.event.repository.default_branch
+    if: github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch
     concurrency:
       group: release-packages-${{ github.event.repository.default_branch }}
       cancel-in-progress: false
